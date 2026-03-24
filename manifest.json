@@ -2,7 +2,7 @@
   "name": "Personal Budget Dashboard",
   "short_name": "Budget",
   "description": "Track your monthly budget, debt payoff and savings goals",
-  "start_url": "/",
+  "start_url": "/budget/",
   "display": "standalone",
   "background_color": "#F7F6F3",
   "theme_color": "#D4622A",
@@ -22,5 +22,9 @@
     }
   ],
   "screenshots": [],
-  "categories": ["finance", "productivity"]
+  "categories": [
+    "finance",
+    "productivity"
+  ],
+  "scope": "/budget/"
 }

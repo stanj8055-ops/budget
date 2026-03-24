@@ -63,7 +63,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .abody{overflow:hidden;max-height:0;transition:max-height .4s ease}
 .abody.open{max-height:4000px}
 .agrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:18px}
-@media(max-width:700px){.agrid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.agrid{grid-template-columns:1fr}}
 .agroup{margin-bottom:16px}
 .agroup-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;padding-left:2px}
 
@@ -241,7 +241,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .dc-paid-badge{display:inline-block;background:var(--green-light);color:var(--green);font-size:10px;font-weight:700;border-radius:4px;padding:1px 7px;margin-left:6px;vertical-align:middle}
 
 
-.sync-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;transition:all .3s;background:var(--surface);border:1px solid var(--border)}.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.sync-pill.saved .sync-dot{background:#2A7D5C}.sync-pill.saving .sync-dot{background:#C47D1A;animation:pulse 1s infinite}.sync-pill.offline .sync-dot{background:#7B7B8F}.sync-pill.error .sync-dot{background:#C4373A}.sync-pill.saved{border-color:rgba(42,125,92,.2);color:#2A7D5C}.sync-pill.saving{color:#C47D1A}.sync-pill.offline{color:var(--muted)}.sync-pill.error{color:#C4373A}@supports(padding:max(0px)){body{padding-bottom:max(60px,env(safe-area-inset-bottom))}}@media(max-width:480px){.page-btn{padding:10px 16px}.tab{padding:9px 14px}.hdr-title{font-size:30px}body{padding:20px 14px 60px}}
+.sync-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;transition:all .3s;background:var(--surface);border:1px solid var(--border)}.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.sync-pill.saved .sync-dot{background:#2A7D5C}.sync-pill.saving .sync-dot{background:#C47D1A;animation:pulse 1s infinite}.sync-pill.offline .sync-dot{background:#7B7B8F}.sync-pill.error .sync-dot{background:#C4373A}.sync-pill.saved{border-color:rgba(42,125,92,.2);color:#2A7D5C}.sync-pill.saving{color:#C47D1A}.sync-pill.offline{color:var(--muted)}.sync-pill.error{color:#C4373A}@supports(padding:max(0px)){body{padding-bottom:max(60px,env(safe-area-inset-bottom))}}@media(max-width:480px){.page-btn{padding:10px 16px}.tab{padding:9px 14px}.hdr-title{font-size:30px}body{padding:20px 14px 60px}.agrid{grid-template-columns:1fr!important}.two-col{grid-template-columns:1fr!important}.dc-boost-row{grid-template-columns:1fr!important}}
 /* LOGIN SCREEN */
 #loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;padding:24px}
 .login-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-lg);padding:36px 32px;width:100%;max-width:380px}
@@ -983,30 +983,34 @@ function renderSavings(months){
   const target=parseFloat(document.getElementById('emergencyTarget')?.value)||500;
   const nets=months.map(({year,month})=>calcMonth(year,month).net);
 
-  // Cumulative: fill emergency fund first, then savings
-  let emergencyFilled=0;
-  let totalSavings=0;
+  // Cumulative running totals
+  let emergencyFilled=0, cumulativeSavings=0;
   const rows=[];
 
   nets.forEach((net,i)=>{
     const leftover=Math.max(0,net);
-    const deficit=Math.min(0,net); // negative = shortfall
     let emFill=0,savFill=0;
     if(leftover>0){
       const emNeeded=Math.max(0,target-emergencyFilled);
       emFill=Math.min(leftover,emNeeded);
       emergencyFilled=Math.min(target,emergencyFilled+emFill);
       savFill=Math.max(0,leftover-emFill);
-      totalSavings+=savFill;
+      cumulativeSavings+=savFill;
     }
-    rows.push({month:months[i],net,leftover,emFill,savFill,emergencyFilled:Math.min(target,emergencyFilled)});
+    rows.push({
+      month:months[i], net, leftover, emFill, savFill,
+      emergencyFilled, // running total of emergency fund
+      cumulativeSavings // running total of savings
+    });
   });
 
+  const totalSavings=cumulativeSavings;
   const totalLeftover=nets.reduce((s,n)=>s+Math.max(0,n),0);
   const totalDeficit=nets.reduce((s,n)=>s+Math.min(0,n),0);
-
-  // KPIs
   const emPct=Math.min(100,(emergencyFilled/target)*100);
+  const maxCumulative=Math.max(...rows.map(r=>r.cumulativeSavings+r.emergencyFilled),1);
+
+  // KPI cards
   document.getElementById('savKpis').innerHTML=`
     <div class="sav-kpi">
       <div class="sav-kpi-lbl">Emergency Fund (target $${target.toFixed(0)})</div>
@@ -1014,12 +1018,12 @@ function renderSavings(months){
       <div style="height:6px;background:var(--surface2);border-radius:100px;overflow:hidden;margin-top:8px">
         <div style="height:100%;width:${emPct.toFixed(1)}%;background:linear-gradient(90deg,#E8652A,#F0925A);border-radius:100px;transition:width 1s cubic-bezier(.34,1.56,.64,1)"></div>
       </div>
-      <div class="sav-kpi-sub">${emPct.toFixed(0)}% funded over 6 months</div>
+      <div class="sav-kpi-sub">${emPct.toFixed(0)}% funded · ${emergencyFilled>=target?'✅ Fully funded':'Building up'}</div>
     </div>
     <div class="sav-kpi">
-      <div class="sav-kpi-lbl">Total Savings</div>
+      <div class="sav-kpi-lbl">Total Savings (6 months)</div>
       <div class="sav-kpi-val ${totalSavings>0?'pos':'neu'}">${fmt(totalSavings)}</div>
-      <div class="sav-kpi-sub">After emergency fund is topped up</div>
+      <div class="sav-kpi-sub">Cumulative after emergency fund</div>
     </div>
     <div class="sav-kpi">
       <div class="sav-kpi-lbl">Total Surplus</div>
@@ -1032,30 +1036,34 @@ function renderSavings(months){
       <div class="sav-kpi-sub">Sum of all negative months</div>
     </div>`;
 
-  // Month bars
-  const maxAbs=Math.max(...nets.map(n=>Math.abs(n)),1);
-  document.getElementById('savMonths').innerHTML=rows.map(({month,net,emFill,savFill,leftover})=>{
-    const emW=leftover>0?(emFill/maxAbs)*100:0;
-    const savW=leftover>0?(savFill/maxAbs)*100:0;
-    const emLeft=0;
-    const savLeft=emW;
-    const cls=net>0?'pos':net<0?'neg':'zero';
-    return`<div class="sav-month-row">
-      <span class="sav-month-lbl">${MS[month.month]}</span>
-      <div class="sav-bar-track">
-        <div class="sav-bar-emergency" style="width:0%;background:linear-gradient(90deg,#E8652A,#F0925A)" data-w="${emW.toFixed(1)}"></div>
-        <div class="sav-bar-savings"   style="width:0%;left:${savLeft.toFixed(1)}%;background:linear-gradient(90deg,#2A7D5C,#43C99A)" data-w="${savW.toFixed(1)}" data-l="${savLeft.toFixed(1)}"></div>
+  // Cumulative bar chart — grows month by month
+  document.getElementById('savMonths').innerHTML=rows.map((row,i)=>{
+    const {month,net,emFill,savFill,emergencyFilled:emFilled,cumulativeSavings:cumSav}=row;
+    const emPctBar = (emFilled/maxCumulative)*100;
+    const savPctBar = (cumSav/maxCumulative)*100;
+    const monthAdded = emFill+savFill;
+    const cls = net>0?'pos':net<0?'neg':'zero';
+    return`<div class="sav-month-row" style="margin-bottom:14px">
+      <span class="sav-month-lbl" style="font-size:13px;font-weight:600;color:var(--text);width:36px;flex-shrink:0">${MS[month.month]}</span>
+      <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+        <div style="position:relative;height:12px;background:var(--surface2);border-radius:100px;overflow:hidden">
+          <div style="position:absolute;left:0;top:0;height:100%;border-radius:100px;background:linear-gradient(90deg,#E8652A,#F0925A);transition:width 1s cubic-bezier(.34,1.56,.64,1);width:0" data-w="${emPctBar.toFixed(1)}"></div>
+          <div style="position:absolute;left:${emPctBar.toFixed(1)}%;top:0;height:100%;border-radius:0 100px 100px 0;background:linear-gradient(90deg,#2A7D5C,#43C99A);transition:width 1s cubic-bezier(.34,1.56,.64,1),left 1s;width:0" data-w="${savPctBar.toFixed(1)}" data-l="${emPctBar.toFixed(1)}"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)">
+          <span>Emergency: <strong style="color:#E8652A">${fmt(emFilled)}</strong></span>
+          <span>Savings: <strong style="color:#2A7D5C">${fmt(cumSav)}</strong></span>
+          ${monthAdded>0?`<span style="color:var(--green)">+${fmt(monthAdded)} this month</span>`:''}
+        </div>
       </div>
-      <span class="sav-month-amt ${cls}">${net===0?'—':fmt(net>0?savFill+emFill:net)}</span>
     </div>`;
   }).join('');
 
   // Animate bars
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    document.querySelectorAll('.sav-bar-emergency[data-w]').forEach(el=>el.style.width=el.dataset.w+'%');
-    document.querySelectorAll('.sav-bar-savings[data-w]').forEach(el=>{
+    document.querySelectorAll('#savMonths [data-w]').forEach(el=>{
       el.style.width=el.dataset.w+'%';
-      el.style.left=el.dataset.l+'%';
+      if(el.dataset.l) el.style.left=el.dataset.l+'%';
     });
   }));
 }
