@@ -285,7 +285,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   window._fbListen=(cb)=>onSnapshot(REF,s=>{if(s.exists())cb(s.data());},e=>{console.warn(e);ss('offline');});
   window._fbLogin=(e,p)=>signInWithEmailAndPassword(auth,e,p);
   window._fbLogout=()=>signOut(auth);
-  onAuthStateChanged(auth,u=>{if(u){document.getElementById('loginScreen').style.display='none';document.getElementById('appWrap').style.display='block';ss('saving');window._authReady&&window._authReady();}else{document.getElementById('loginScreen').style.display='flex';document.getElementById('appWrap').style.display='none';ss('offline');}});
+  onAuthStateChanged(auth,u=>{
+    if(u){document.getElementById('loginScreen').style.display='none';document.getElementById('appWrap').style.display='block';ss('saving');window._authReady&&window._authReady();}
+    else{document.getElementById('loginScreen').style.display='flex';document.getElementById('appWrap').style.display='none';ss('offline');}
+  });
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(console.warn);
 </script>
 </head>
@@ -618,6 +621,7 @@ function initCalendarSelects(){
   const ySel = document.getElementById('calYear');
   if(!mSel||!ySel) return;
   mSel.innerHTML = MN.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+  // Year range: 2024 to 20 years from now
   const currentYr = new Date().getFullYear();
   const endYr = Math.max(currentYr + 20, 2035);
   ySel.innerHTML = Array.from({length: endYr - 2024 + 1},(_,i)=>2024+i).map(y=>`<option value="${y}">${y}</option>`).join('');
@@ -810,6 +814,16 @@ function renderA(){
   inner.innerHTML='';inner.appendChild(grid);
 }
 
+
+// Named wrappers for inline-defined add functionality (for external calling)
+function addItem(key){
+  const item={id:nid(),label:'New Item',amount:0,subtype:key==='debt'?'monthly':undefined};
+  sections[key].push(item);
+  const list=document.getElementById('alist_'+key);
+  if(list){ const el=buildItem(key,item); list.appendChild(el); const li=el.querySelector('.ilbl-inp'); if(li)setTimeout(()=>{li.focus();li.select();},30); }
+  else renderA();
+}
+function buildAttackAllocs(){ /* attack removed — stub kept for compat */ }
 function applyA(){
   Object.keys(sections).forEach(key=>{
     sections[key].forEach(item=>{
@@ -1042,6 +1056,21 @@ function renderTransferLog(){
         </div>`).join('');
 }
 
+
+function calcProjectedSavings(){
+  const months = getMonths();
+  const rawT = document.getElementById('emergencyTarget')?.value;
+  const target = (rawT===''||rawT===null||rawT===undefined) ? 500 : parseFloat(rawT)||0;
+  let emergFilled=0, totalSavings=0;
+  months.forEach(({year,month})=>{
+    const net = calcMonth(year,month).net;
+    const leftover = Math.max(0, net);
+    const emFill = Math.min(leftover, Math.max(0, target - emergFilled));
+    emergFilled = Math.min(target, emergFilled + emFill);
+    totalSavings += Math.max(0, leftover - emFill);
+  });
+  return totalSavings;
+}
 function applyTransfer(){
   const amt = parseFloat(document.getElementById('transferAmt')?.value)||0;
   const sel = document.getElementById('transferDebt');
@@ -1455,7 +1484,7 @@ function deserializeFromFirebase(data){if(!data)return;if(data.sections){Object.
 let _syncInit=false,_localFlag=false;
 function initFirebaseSync(){if(!window._fbListen){updateSyncUI('offline');return;}updateSyncUI('saving');window._fbListen(data=>{if(_localFlag){_localFlag=false;return;}deserializeFromFirebase(data);renderA();renderAll();updateSyncUI('saved');_syncInit=true;});setTimeout(()=>{if(!_syncInit){saveToFirebase();_syncInit=true;}},3000);}
 function saveToFirebase(){if(!window._fbSave){updateSyncUI('offline');return;}updateSyncUI('saving');_localFlag=true;window._fbSave(serializeForFirebase());}
-async function doLogin(){const email=document.getElementById('loginEmail').value.trim();const pass=document.getElementById('loginPassword').value;const btn=document.getElementById('loginBtn');const err=document.getElementById('loginError');if(!email||!pass){err.textContent='Please enter email and password.';return;}btn.disabled=true;btn.textContent='Signing in…';err.textContent='';try{await window._fbLogin(email,pass);}catch(e){err.textContent=e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'?'Incorrect email or password.":'Login failed.';btn.disabled=false;btn.textContent='Sign In';}}
+async function doLogin(){const email=document.getElementById('loginEmail').value.trim();const pass=document.getElementById('loginPassword').value;const btn=document.getElementById('loginBtn');const err=document.getElementById('loginError');if(!email||!pass){err.textContent='Please enter email and password.';return;}btn.disabled=true;btn.textContent='Signing in…';err.textContent='';try{await window._fbLogin(email,pass);}catch(e){err.textContent=e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'?'Incorrect email or password.':'Login failed.';btn.disabled=false;btn.textContent='Sign In';}}
 window._authReady=function(){initFirebaseSync();};
 
 renderA();
