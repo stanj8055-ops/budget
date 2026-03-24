@@ -116,7 +116,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .etbl .total td{font-weight:600;font-size:15px;padding-top:14px}
 .etbl .total td:last-child{color:var(--green)}
 .etbl .neg-total td:last-child{color:var(--red)!important}
-.bdg-oo{display:inline-block;background:var(--amber-light);color:var(--amber);font-size:10px;font-weight:600;border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle}
+.bdg-boost{display:inline-block;background:#EAF5F0;color:#2A7D5C;font-size:10px;font-weight:600;border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle}.bdg-oo{display:inline-block;background:var(--amber-light);color:var(--amber);font-size:10px;font-weight:600;border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle}
 .bdg-5w{display:inline-block;background:var(--amber-light);color:var(--amber);font-size:10px;font-weight:600;border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle}
 
 /* CHART */
@@ -259,6 +259,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .transfer-log-item .tl-debt{color:var(--green);font-weight:600}
 .transfer-log-item .tl-undo{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px}
 .transfer-log-item .tl-undo:hover{color:var(--red);background:var(--red-light)}
+
+/* CALENDAR MONTH PICKER */
+.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.cal-nav-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.cal-sel{border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);padding:6px 10px;outline:none;cursor:pointer;transition:border-color .15s}
+.cal-sel:focus{border-color:var(--accent)}
+.cal-nav-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
+.cal-nav-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.cal-range-lbl{font-size:11px;color:var(--muted);padding:4px 10px;background:var(--surface2);border-radius:100px}
 .sync-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;transition:all .3s;background:var(--surface);border:1px solid var(--border)}.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.sync-pill.saved .sync-dot{background:#2A7D5C}.sync-pill.saving .sync-dot{background:#C47D1A;animation:pulse 1s infinite}.sync-pill.offline .sync-dot{background:#7B7B8F}.sync-pill.error .sync-dot{background:#C4373A}.sync-pill.saved{border-color:rgba(42,125,92,.2);color:#2A7D5C}.sync-pill.saving{color:#C47D1A}.sync-pill.offline{color:var(--muted)}.sync-pill.error{color:#C4373A}@supports(padding:max(0px)){body{padding-bottom:max(60px,env(safe-area-inset-bottom))}}@media(max-width:480px){.page-btn{padding:8px 12px;font-size:12px}.tab{padding:8px 12px;font-size:12px}.hdr-title{font-size:26px}body{padding:16px 12px 60px}.two-col{grid-template-columns:1fr!important}.dc-boost-row{grid-template-columns:1fr!important}}#loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;padding:24px}.login-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-lg);padding:36px 32px;width:100%;max-width:380px}.login-logo{font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:6px}.login-logo span{color:var(--accent);font-style:italic}.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px}.login-field{margin-bottom:16px}.login-field label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}.login-field input{width:100%;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);padding:11px 14px;outline:none;transition:border-color .15s}.login-field input:focus{border-color:var(--accent)}.login-btn{width:100%;margin-top:8px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}.login-btn:disabled{background:var(--muted);cursor:not-allowed}.login-error{color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px}.footer-note{text-align:center;font-size:12px;color:var(--muted);margin-top:32px;padding-top:20px;border-top:1px solid var(--border)}
 .divider{height:1px;background:var(--border);margin:14px 0}
 .ok-callout{background:var(--green-light);border:1px solid rgba(42,125,92,.15);border-radius:var(--rs);padding:12px 16px;margin-top:14px;font-size:13px;color:var(--green);display:flex;gap:8px;align-items:center}
@@ -267,55 +276,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey:            "AIzaSyCa6QhdWNzjfxoqc_Hpjg__geqaStG7lm4",
-    authDomain:        "my-budget-ed429.firebaseapp.com",
-    projectId:         "my-budget-ed429",
-    storageBucket:     "my-budget-ed429.firebasestorage.app",
-    messagingSenderId: "309077309911",
-    appId:             "1:309077309911:web:ba25842b4581cb395a7392"
-  };
-
-  const app=initializeApp(firebaseConfig);
-  const db=getFirestore(app);
-  const auth=getAuth(app);
-  const REF=doc(db,"budget","main");
-  function setSyncStatus(s){window._syncStatus=s;window.updateSyncUI&&window.updateSyncUI(s);}
-  window._fbSave=async(data)=>{try{await setDoc(REF,{...data,updatedAt:serverTimestamp()});setSyncStatus('saved');}catch(e){setSyncStatus('error');console.error(e);}};
-  window._fbListen=(cb)=>onSnapshot(REF,snap=>{if(snap.exists())cb(snap.data());},err=>{console.warn(err);setSyncStatus('offline');});
-  window._fbLogin=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
+  import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  const firebaseConfig={apiKey:"AIzaSyCa6QhdWNzjfxoqc_Hpjg__geqaStG7lm4",authDomain:"my-budget-ed429.firebaseapp.com",projectId:"my-budget-ed429",storageBucket:"my-budget-ed429.firebasestorage.app",messagingSenderId:"309077309911",appId:"1:309077309911:web:ba25842b4581cb395a7392"};
+  const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app),REF=doc(db,"budget","main");
+  function ss(s){window._syncStatus=s;window.updateSyncUI&&window.updateSyncUI(s);}
+  window._fbSave=async(d)=>{try{await setDoc(REF,{...d,updatedAt:serverTimestamp()});ss('saved');}catch(e){ss('error');console.error(e);}};
+  window._fbListen=(cb)=>onSnapshot(REF,s=>{if(s.exists())cb(s.data());},e=>{console.warn(e);ss('offline');});
+  window._fbLogin=(e,p)=>signInWithEmailAndPassword(auth,e,p);
   window._fbLogout=()=>signOut(auth);
-  onAuthStateChanged(auth,(user)=>{
-    if(user){
-      document.getElementById('loginScreen').style.display='none';
-      document.getElementById('appWrap').style.display='block';
-      setSyncStatus('saving');
-      window._authReady&&window._authReady();
-    } else {
-      document.getElementById('loginScreen').style.display='flex';
-      document.getElementById('appWrap').style.display='none';
-      setSyncStatus('offline');
-    }
-  });
+  onAuthStateChanged(auth,u=>{if(u){document.getElementById('loginScreen').style.display='none';document.getElementById('appWrap').style.display='block';ss('saving');window._authReady&&window._authReady();}else{document.getElementById('loginScreen').style.display='flex';document.getElementById('appWrap').style.display='none';ss('offline');}});
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(console.warn);
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:flex">
-  <div class="login-card">
-    <div class="login-logo">Your <span>Budget</span></div>
-    <div class="login-sub">Sign in to access your dashboard</div>
-    <div class="login-field"><label>Email</label><input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email"></div>
-    <div class="login-field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
-    <div class="login-error" id="loginError"></div>
-  </div>
-</div>
+<div id="loginScreen" style="display:flex"><div class="login-card"><div class="login-logo">Your <span>Budget</span></div><div class="login-sub">Sign in to access your dashboard</div><div class="login-field"><label>Email</label><input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email"></div><div class="login-field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div><button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button><div class="login-error" id="loginError"></div></div></div>
 <div class="wrap" id="appWrap" style="display:none">
 
   <div class="hdr">
@@ -325,10 +300,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
       <div class="hdr-badge"><span class="dot"></span><span id="hdrBadge">Live · 6-month view</span></div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="sync-pill offline" id="syncPill"><div class="sync-dot"></div><span id="syncTxt">Connecting…</span></div>
-        <button onclick="window._fbLogout&&window._fbLogout()" style="background:none;border:1px solid var(--border);border-radius:100px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer">Sign out</button>
-      </div>
+      <div style="display:flex;align-items:center;gap:8px"><div class="sync-pill offline" id="syncPill"><div class="sync-dot"></div><span id="syncTxt">Connecting…</span></div><button onclick="window._fbLogout&&window._fbLogout()" style="background:none;border:1px solid var(--border);border-radius:100px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer">Sign out</button></div>
     </div>
   </div>
 
@@ -356,7 +328,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
     <!-- MONTHLY BREAKDOWN -->
     <div class="card">
-      <div class="card-title">Monthly Breakdown</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div class="card-title" style="margin-bottom:0">Monthly Breakdown</div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="shiftWindow(-1)" title="Previous month">&#8249;</button>
+          <select class="cal-sel" id="calMonth" onchange="jumpToDate()"></select>
+          <select class="cal-sel" id="calYear" onchange="jumpToDate()"></select>
+          <button class="cal-nav-btn" onclick="shiftWindow(1)" title="Next month">&#8250;</button>
+          <button class="cal-nav-btn" onclick="resetToToday()" title="Back to today" style="width:auto;padding:0 10px;border-radius:100px;font-size:11px;font-weight:600">Today</button>
+        </div>
+      </div>
       <div class="tabs" id="tabs"></div>
       <div id="mdets"></div>
     </div>
@@ -581,10 +562,66 @@ function countFridays(y,m){
   for(let d=1;d<=days;d++)if(new Date(y,m,d).getDay()===5)c++;
   return c;
 }
+// Custom window start — overridden by calendar nav
+let _windowStart = null; // null = auto (current month)
+
 function getMonths(){
-  const now=new Date(); let sy=now.getFullYear(),sm=now.getMonth();
-  if(sy===2026&&sm===2)sm=3;
+  let sy, sm;
+  if(_windowStart){
+    sy = _windowStart.year; sm = _windowStart.month;
+  } else {
+    const now=new Date(); sy=now.getFullYear(); sm=now.getMonth();
+    if(sy===2026&&sm===2)sm=3;
+  }
   return Array.from({length:6},(_,i)=>({year:sy+Math.floor((sm+i)/12),month:(sm+i)%12}));
+}
+
+function shiftWindow(delta){
+  const months = getMonths();
+  const first = months[0];
+  let nm = first.month + delta;
+  let ny = first.year;
+  if(nm<0){nm=11;ny--;}
+  if(nm>11){nm=0;ny++;}
+  _windowStart = {year:ny, month:nm};
+  syncCalendarSelects();
+  activeTab=0;
+  renderAll();
+}
+
+function jumpToDate(){
+  const m = parseInt(document.getElementById('calMonth')?.value??0);
+  const y = parseInt(document.getElementById('calYear')?.value??2026);
+  _windowStart = {year:y, month:m};
+  activeTab=0;
+  renderAll();
+}
+
+function resetToToday(){
+  _windowStart = null;
+  syncCalendarSelects();
+  activeTab=0;
+  renderAll();
+}
+
+function syncCalendarSelects(){
+  const months = getMonths();
+  const first = months[0];
+  const mSel = document.getElementById('calMonth');
+  const ySel = document.getElementById('calYear');
+  if(mSel) mSel.value = first.month;
+  if(ySel) ySel.value = first.year;
+}
+
+function initCalendarSelects(){
+  const mSel = document.getElementById('calMonth');
+  const ySel = document.getElementById('calYear');
+  if(!mSel||!ySel) return;
+  mSel.innerHTML = MN.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+  const currentYr = new Date().getFullYear();
+  const endYr = Math.max(currentYr + 20, 2035);
+  ySel.innerHTML = Array.from({length: endYr - 2024 + 1},(_,i)=>2024+i).map(y=>`<option value="${y}">${y}</option>`).join('');
+  syncCalendarSelects();
 }
 const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -592,7 +629,8 @@ const isApr26=(y,m)=>y===2026&&m===3;
 const isSuit=(y,m)=>y===2026&&m>=4&&m<=9;
 
 // ── CALC ──────────────────────────────────────────────────────────────────────
-function calcMonth(y,m){
+function calcMonth(y,m,extraBoost){
+  const boost = extraBoost !== undefined ? extraBoost : (dcState ? dcState.boost : 0);
   const fri=countFridays(y,m);
   const salary=sections.income.reduce((s,x)=>s+x.amount,0);
   const fixed=sections.fixed.reduce((s,x)=>s+x.amount,0);
@@ -603,25 +641,23 @@ function calcMonth(y,m){
   },0);
   const loanItem=sections.debt.find(x=>x.subtype==='weekly');
   const loanAmt=loanItem?loanItem.amount*fri:0;
-  // weekly counted above | fortnightly=×2/mo | monthly=flat | plan=÷months
   const otherDebt=sections.debt.filter(x=>x.subtype!=='weekly').reduce((s,x)=>{
     if(x.subtype==='suit') return s+(isSuit(y,m)?x.amount/6:0);
-    if(x.subtype==='plan') return s+x.amount; // flat monthly instalment
+    if(x.subtype==='plan') return s+x.amount;
     if(x.subtype==='fortnightly') return s+x.amount*2;
-    return s+x.amount; // monthly
+    return s+x.amount;
   },0);
   let oneoff=0;
   sections.oneoff.forEach(x=>{
     if(x.subtype==='suit'){if(isSuit(y,m))oneoff+=x.amount/6;}
     else{if(isApr26(y,m))oneoff+=x.amount;}
   });
-  // Also handle suit-type items that may have been dragged into debt section
   sections.debt.filter(x=>x.subtype==='suit').forEach(x=>{
     if(isSuit(y,m))oneoff+=x.amount/6;
   });
   const debt=loanAmt+otherDebt;
-  const totalExp=fixed+variable+debt+oneoff;
-  return{salary,fixed,variable,loanAmt,otherDebt,oneoff,debt,totalExp,net:salary-totalExp,fri};
+  const totalExp=fixed+variable+debt+oneoff+boost;
+  return{salary,fixed,variable,loanAmt,otherDebt,oneoff,debt,boost,totalExp,net:salary-totalExp,fri};
 }
 
 // ── DRAG STATE ────────────────────────────────────────────────────────────────
@@ -814,6 +850,7 @@ function renderTabs(months){
   document.getElementById('mdets').innerHTML=months.map(({year,month},i)=>{
     const mkey=year+'-'+month;
     const r=calcMonth(year,month);
+    const boost=r.boost||0;
     const callout=r.net>=500
       ?`<div class="ok-callout">&#x1F49A; Strong month — consider saving <strong>${fmt(r.net-200)}</strong>.</div>`
       :r.net<0
@@ -833,6 +870,8 @@ function renderTabs(months){
       const note=wd?`actual: ${wd.map((v,i)=>'W'+(i+1)+':$'+v).join(', ')}`:`$${x.amount}/wk×${r.fri}`;
       rows.push({label:x.label,val:-total,note,hasWeekly:!!wd,itemId:x.id,weekCount:r.fri});
     });
+    // Boost line item
+    if(boost>0) rows.push({label:'Extra Debt Repayment (Boost)',val:-boost,badge:'BOOST'});
     rows.push({s:'DEBT & REPAYMENTS'});
     if(loanItem)rows.push({label:loanItem.label,val:-(loanItem.amount*r.fri),badge:r.fri===5?'5W':null});
     sections.debt.filter(x=>x.subtype!=='weekly'&&x.subtype!=='suit').forEach(x=>rows.push({label:x.label,val:-x.amount}));
@@ -846,7 +885,7 @@ function renderTabs(months){
     }
     const trs=rows.map(row=>{
       if(row.s)return`<tr class="sctn"><td colspan="2">${row.s}</td></tr>`;
-      const bdg=row.badge?`<span class="${row.badge==='5W'?'bdg-5w':'bdg-oo'}">${row.badge}</span>`:'';
+      const bdg=row.badge?`<span class="${row.badge==='5W'?'bdg-5w':row.badge==='BOOST'?'bdg-boost':'bdg-oo'}">${row.badge}</span>`:'';
       // Variable items get a weekly breakdown toggle
       if(row.itemId!==undefined){
         const item=sections.variable.find(x=>x.id===row.itemId);
@@ -969,7 +1008,8 @@ function renderDebt(months){
 // ── HEADER ────────────────────────────────────────────────────────────────────
 function renderHeader(months){
   const now=new Date();
-  document.getElementById('hdrSub').textContent=`6-month forecast · ${MN[months[0].month]} ${months[0].year} – ${MN[months[5].month]} ${months[5].year}`;
+  const isCustomWindow = _windowStart !== null;
+  document.getElementById('hdrSub').textContent=`${isCustomWindow?'Custom window':'6-month forecast'} · ${MN[months[0].month]} ${months[0].year} – ${MN[months[5].month]} ${months[5].year}`;
   document.getElementById('hdrBadge').textContent=`Live · Updated ${now.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}`;
 }
 function toggleA(){
@@ -977,37 +1017,108 @@ function toggleA(){
   document.getElementById('ticon').classList.toggle('open');
 }
 
+// ── SAVINGS → DEBT TRANSFER ──────────────────────────────────────────────────
+let transferHistory = [];
+
+function populateTransferDebtSelect(){
+  const sel = document.getElementById('transferDebt');
+  if(!sel) return;
+  const active = getActiveDebtTracker();
+  sel.innerHTML = active.filter(d=>d.remaining>0).length
+    ? active.filter(d=>d.remaining>0).map(d=>`<option value="${d.id}">${d.name} (${fmt(d.remaining)} left)</option>`).join('')
+    : '<option value="">No debts remaining 🎉</option>';
+}
+
+function renderTransferLog(){
+  populateTransferDebtSelect();
+  const log = document.getElementById('transferLog');
+  if(!log) return;
+  log.innerHTML = transferHistory.length === 0
+    ? '<div style="font-size:11px;color:var(--muted);padding:2px 0">No transfers yet</div>'
+    : transferHistory.map((t,i)=>`
+        <div class="transfer-log-item">
+          <span>${t.date}: <span class="tl-debt">${fmt(t.amount)}</span> → ${t.debtName}</span>
+          <button class="tl-undo" onclick="undoTransfer(${i})">Undo</button>
+        </div>`).join('');
+}
+
+function applyTransfer(){
+  const amt = parseFloat(document.getElementById('transferAmt')?.value)||0;
+  const sel = document.getElementById('transferDebt');
+  const storeId = sel?.value;
+  if(amt<=0||!storeId) return;
+
+  // Check available savings
+  const months = getMonths();
+  const rawT = document.getElementById('emergencyTarget')?.value;
+  const tgt = rawT===''||rawT===null||rawT===undefined ? 500 : parseFloat(rawT)||0;
+  let emF=0, totalSav=0;
+  months.forEach(({year,month})=>{
+    const net=calcMonth(year,month).net;
+    const lo=Math.max(0,net);
+    const ef=Math.min(lo,Math.max(0,tgt-emF));
+    emF=Math.min(tgt,emF+ef);
+    totalSav+=Math.max(0,lo-ef);
+  });
+  const used = transferHistory.reduce((s,t)=>s+t.amount,0);
+  if(amt > totalSav-used){
+    alert(`Only ${fmt(totalSav-used)} available in savings.`); return;
+  }
+
+  if(debtStore[storeId]) debtStore[storeId].remaining = Math.max(0, debtStore[storeId].remaining - amt);
+  const dt = getActiveDebtTracker().find(d=>d.id===storeId);
+  transferHistory.push({ amount:amt, debtName:dt?.name||'Debt', storeId,
+    date:new Date().toLocaleDateString('en-AU',{day:'numeric',month:'short'}) });
+
+  document.getElementById('transferAmt').value = '';
+  renderSavings(getMonths());
+  if(currentPage==='debt') renderDebtClosure();
+  if(typeof saveToFirebase==='function') saveToFirebase();
+}
+
+function undoTransfer(idx){
+  const t = transferHistory[idx];
+  if(!t) return;
+  if(debtStore[t.storeId]) debtStore[t.storeId].remaining = Math.min(
+    debtStore[t.storeId].total||999999,
+    (debtStore[t.storeId].remaining||0) + t.amount
+  );
+  transferHistory.splice(idx,1);
+  renderSavings(getMonths());
+  if(currentPage==='debt') renderDebtClosure();
+  if(typeof saveToFirebase==='function') saveToFirebase();
+}
+
 // ── SAVINGS TRACKER ───────────────────────────────────────────────────────────
 function renderSavings(months){
   renderTransferLog();
-  const rawT=document.getElementById('emergencyTarget')?.value;
-  const target=rawT===''||rawT===null||rawT===undefined?500:parseFloat(rawT)||0;
-  const nets=months.map(({year,month})=>calcMonth(year,month).net);
+  const rawT = document.getElementById('emergencyTarget')?.value;
+  const target = (rawT===''||rawT===null||rawT===undefined) ? 500 : parseFloat(rawT)||0;
+  const nets = months.map(({year,month})=>calcMonth(year,month).net);
 
-  // Cumulative: fill emergency fund first, then savings
-  let emergencyFilled=0;
-  let totalSavings=0;
+  // Cumulative running totals
+  let emergencyFilled=0, cumulativeSavings=0;
   const rows=[];
-
   nets.forEach((net,i)=>{
     const leftover=Math.max(0,net);
-    const deficit=Math.min(0,net); // negative = shortfall
-    let emFill=0,savFill=0;
+    let emFill=0, savFill=0;
     if(leftover>0){
       const emNeeded=Math.max(0,target-emergencyFilled);
       emFill=Math.min(leftover,emNeeded);
       emergencyFilled=Math.min(target,emergencyFilled+emFill);
       savFill=Math.max(0,leftover-emFill);
-      totalSavings+=savFill;
+      cumulativeSavings+=savFill;
     }
-    rows.push({month:months[i],net,leftover,emFill,savFill,emergencyFilled:Math.min(target,emergencyFilled)});
+    rows.push({ month:months[i], net, leftover, emFill, savFill,
+      emergencyFilled, cumulativeSavings });
   });
 
   const totalLeftover=nets.reduce((s,n)=>s+Math.max(0,n),0);
   const totalDeficit=nets.reduce((s,n)=>s+Math.min(0,n),0);
+  const emPct=target>0?Math.min(100,(emergencyFilled/target)*100):100;
+  const maxCumulative=Math.max(...rows.map(r=>r.cumulativeSavings+r.emergencyFilled),1);
 
-  // KPIs
-  const emPct=Math.min(100,(emergencyFilled/target)*100);
+  // KPI cards
   document.getElementById('savKpis').innerHTML=`
     <div class="sav-kpi">
       <div class="sav-kpi-lbl">Emergency Fund (target $${target.toFixed(0)})</div>
@@ -1015,12 +1126,12 @@ function renderSavings(months){
       <div style="height:6px;background:var(--surface2);border-radius:100px;overflow:hidden;margin-top:8px">
         <div style="height:100%;width:${emPct.toFixed(1)}%;background:linear-gradient(90deg,#E8652A,#F0925A);border-radius:100px;transition:width 1s cubic-bezier(.34,1.56,.64,1)"></div>
       </div>
-      <div class="sav-kpi-sub">${emPct.toFixed(0)}% funded over 6 months</div>
+      <div class="sav-kpi-sub">${emPct.toFixed(0)}% funded · ${emergencyFilled>=target?'✅ Fully funded':'Building up'}</div>
     </div>
     <div class="sav-kpi">
-      <div class="sav-kpi-lbl">Total Savings</div>
-      <div class="sav-kpi-val ${totalSavings>0?'pos':'neu'}">${fmt(totalSavings)}</div>
-      <div class="sav-kpi-sub">After emergency fund is topped up</div>
+      <div class="sav-kpi-lbl">Total Savings (6 months)</div>
+      <div class="sav-kpi-val ${cumulativeSavings>0?'pos':'neu'}">${fmt(cumulativeSavings)}</div>
+      <div class="sav-kpi-sub">Cumulative after emergency fund</div>
     </div>
     <div class="sav-kpi">
       <div class="sav-kpi-lbl">Total Surplus</div>
@@ -1033,30 +1144,33 @@ function renderSavings(months){
       <div class="sav-kpi-sub">Sum of all negative months</div>
     </div>`;
 
-  // Month bars
-  const maxAbs=Math.max(...nets.map(n=>Math.abs(n)),1);
-  document.getElementById('savMonths').innerHTML=rows.map(({month,net,emFill,savFill,leftover})=>{
-    const emW=leftover>0?(emFill/maxAbs)*100:0;
-    const savW=leftover>0?(savFill/maxAbs)*100:0;
-    const emLeft=0;
-    const savLeft=emW;
-    const cls=net>0?'pos':net<0?'neg':'zero';
-    return`<div class="sav-month-row">
-      <span class="sav-month-lbl">${MS[month.month]}</span>
-      <div class="sav-bar-track">
-        <div class="sav-bar-emergency" style="width:0%;background:linear-gradient(90deg,#E8652A,#F0925A)" data-w="${emW.toFixed(1)}"></div>
-        <div class="sav-bar-savings"   style="width:0%;left:${savLeft.toFixed(1)}%;background:linear-gradient(90deg,#2A7D5C,#43C99A)" data-w="${savW.toFixed(1)}" data-l="${savLeft.toFixed(1)}"></div>
+  // Cumulative month bars
+  document.getElementById('savMonths').innerHTML=rows.map((row)=>{
+    const {month,net,emFill,savFill,emergencyFilled:emFilled,cumulativeSavings:cumSav}=row;
+    const emPctBar  = maxCumulative>0 ? (emFilled/maxCumulative)*100 : 0;
+    const savPctBar = maxCumulative>0 ? (cumSav/maxCumulative)*100   : 0;
+    const monthAdded = emFill+savFill;
+    return`<div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:13px;font-weight:600;color:var(--text);width:36px;flex-shrink:0">${MS[month.month]}</span>
+        <div style="flex:1;position:relative;height:12px;background:var(--surface2);border-radius:100px;overflow:hidden">
+          <div style="position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,#E8652A,#F0925A);border-radius:100px;transition:width 1s cubic-bezier(.34,1.56,.64,1);width:0" data-w="${emPctBar.toFixed(1)}"></div>
+          <div style="position:absolute;left:${emPctBar.toFixed(1)}%;top:0;height:100%;background:linear-gradient(90deg,#2A7D5C,#43C99A);border-radius:0 100px 100px 0;transition:width 1s cubic-bezier(.34,1.56,.64,1);width:0" data-w="${savPctBar.toFixed(1)}" data-l="${emPctBar.toFixed(1)}"></div>
+        </div>
       </div>
-      <span class="sav-month-amt ${cls}">${net===0?'—':fmt(net>0?savFill+emFill:net)}</span>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:3px 46px 0">
+        <span>Emergency: <strong style="color:#E8652A">${fmt(emFilled)}</strong></span>
+        <span>Savings: <strong style="color:#2A7D5C">${fmt(cumSav)}</strong></span>
+        ${monthAdded>0?`<span style="color:var(--green)">+${fmt(monthAdded)}</span>`:''}
+      </div>
     </div>`;
   }).join('');
 
   // Animate bars
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    document.querySelectorAll('.sav-bar-emergency[data-w]').forEach(el=>el.style.width=el.dataset.w+'%');
-    document.querySelectorAll('.sav-bar-savings[data-w]').forEach(el=>{
+    document.querySelectorAll('#savMonths [data-w]').forEach(el=>{
       el.style.width=el.dataset.w+'%';
-      el.style.left=el.dataset.l+'%';
+      if(el.dataset.l) el.style.left=el.dataset.l+'%';
     });
   }));
 }
@@ -1305,6 +1419,7 @@ function switchPage(page){
 function renderAll(){
   const months=getMonths();
   renderHeader(months);renderKPIs(months);renderTabs(months);renderChart(months);renderDebt(months);renderSavings(months);
+  initCalendarSelects();
   if(currentPage==='debt')renderDebtClosure();
 }
 
@@ -1336,11 +1451,11 @@ function updateWeek(itemId,mkey,weekIdx,val,panelId,year,month){
 
 window.updateSyncUI=function(s){const p=document.getElementById('syncPill'),t=document.getElementById('syncTxt');if(!p)return;p.className='sync-pill '+s;t.textContent={saved:'Synced',saving:'Saving…',offline:'Offline',error:'Sync error'}[s]||s;};
 function serializeForFirebase(){const ds=Object.entries(debtStore).map(([id,v])=>({id,...v}));return{sections:JSON.parse(JSON.stringify(sections)),debtStore:ds,dcState:{boost:dcState.boost,priority:dcState.priority},transferHistory:JSON.parse(JSON.stringify(transferHistory))};}
-function deserializeFromFirebase(data){if(!data)return;if(data.sections){Object.keys(data.sections).forEach(k=>{if(data.sections[k])sections[k]=data.sections[k];});sections.variable.forEach(v=>{if(!v.weeklyData)v.weeklyData={};});}if(data.debtStore){data.debtStore.forEach(d=>{debtStore[d.id]={total:d.total,remaining:d.remaining,cls:d.cls,payoff:d.payoff};});}if(data.dcState){dcState.boost=data.dcState.boost||0;dcState.priority=data.dcState.priority||'avalanche';}if(data.transferHistory){transferHistory=data.transferHistory;}}
+function deserializeFromFirebase(data){if(!data)return;if(data.sections){Object.keys(data.sections).forEach(k=>{if(data.sections[k])sections[k]=data.sections[k];});sections.variable.forEach(v=>{if(!v.weeklyData)v.weeklyData={};});}if(data.debtStore){data.debtStore.forEach(d=>{debtStore[d.id]={total:d.total,remaining:d.remaining,cls:d.cls,payoff:d.payoff};});}if(data.dcState){dcState.boost=data.dcState.boost||0;dcState.priority=data.dcState.priority||'avalanche';}if(data.transferHistory)transferHistory=data.transferHistory;}
 let _syncInit=false,_localFlag=false;
 function initFirebaseSync(){if(!window._fbListen){updateSyncUI('offline');return;}updateSyncUI('saving');window._fbListen(data=>{if(_localFlag){_localFlag=false;return;}deserializeFromFirebase(data);renderA();renderAll();updateSyncUI('saved');_syncInit=true;});setTimeout(()=>{if(!_syncInit){saveToFirebase();_syncInit=true;}},3000);}
 function saveToFirebase(){if(!window._fbSave){updateSyncUI('offline');return;}updateSyncUI('saving');_localFlag=true;window._fbSave(serializeForFirebase());}
-async function doLogin(){const email=document.getElementById('loginEmail').value.trim();const pass=document.getElementById('loginPassword').value;const btn=document.getElementById('loginBtn');const err=document.getElementById('loginError');if(!email||!pass){err.textContent='Please enter email and password.';return;}btn.disabled=true;btn.textContent='Signing in…';err.textContent='';try{await window._fbLogin(email,pass);}catch(e){err.textContent=e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'?'Incorrect email or password.':'Login failed.';btn.disabled=false;btn.textContent='Sign In';}}
+async function doLogin(){const email=document.getElementById('loginEmail').value.trim();const pass=document.getElementById('loginPassword').value;const btn=document.getElementById('loginBtn');const err=document.getElementById('loginError');if(!email||!pass){err.textContent='Please enter email and password.';return;}btn.disabled=true;btn.textContent='Signing in…';err.textContent='';try{await window._fbLogin(email,pass);}catch(e){err.textContent=e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'?'Incorrect email or password.":'Login failed.';btn.disabled=false;btn.textContent='Sign In';}}
 window._authReady=function(){initFirebaseSync();};
 
 renderA();
