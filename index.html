@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Budget">
+<meta name="theme-color" content="#D4622A">
+<title>Personal Budget Dashboard</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F6F3;--surface:#fff;--surface2:#F0EFE9;
+  --text:#1C1C28;--muted:#7B7B8F;
+  --accent:#D4622A;--accent-light:#FDF1EB;
+  --green:#2A7D5C;--green-light:#EAF5F0;
+  --red:#C4373A;--red-light:#FDEAEA;
+  --amber:#C47D1A;--amber-light:#FDF4E3;
+  --border:#E8E7E2;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.08);
+  --r:14px;--rs:8px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:32px 20px 60px}
+.wrap{max-width:1100px;margin:0 auto}
+
+/* HEADER */
+.hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:36px;flex-wrap:wrap;gap:12px}
+.hdr-title{font-family:'Instrument Serif',serif;font-size:38px;line-height:1.1}
+.hdr-title span{color:var(--accent);font-style:italic}
+.hdr-sub{font-size:14px;color:var(--muted);margin-top:4px}
+.hdr-badge{background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:8px 18px;font-size:13px;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* CARD */
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);padding:24px;margin-bottom:20px}
+.card-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';display:block;width:3px;height:12px;background:var(--accent);border-radius:2px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);transition:transform .2s;opacity:0;transform:translateY(12px);animation:fadeUp .5s forwards}
+.kpi:nth-child(1){animation-delay:.05s}.kpi:nth-child(2){animation-delay:.12s}.kpi:nth-child(3){animation-delay:.19s}.kpi:nth-child(4){animation-delay:.26s}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.kpi-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.kpi-val{font-family:'Instrument Serif',serif;font-size:28px;line-height:1}
+.kpi-val.pos{color:var(--green)}.kpi-val.neg{color:var(--red)}.kpi-val.neu{color:var(--text)}.kpi-val.acc{color:var(--accent)}
+.kpi-sub{font-size:12px;color:var(--muted);margin-top:5px}
+
+/* ASSUMPTIONS */
+.atoggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.ticon{font-size:18px;transition:transform .25s;color:var(--muted)}
+.ticon.open{transform:rotate(180deg)}
+.abody{overflow:hidden;max-height:0;transition:max-height .4s ease}
+.abody.open{max-height:4000px}
+.agrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:18px}
+@media(max-width:700px){.agrid{grid-template-columns:1fr 1fr}}
+.agroup{margin-bottom:16px}
+.agroup-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;padding-left:2px}
+
+/* DROP ZONE highlight */
+.alist{min-height:8px;border-radius:var(--rs);transition:background .15s,box-shadow .15s}
+.alist.drag-over{background:rgba(212,98,42,.06);box-shadow:0 0 0 2px var(--accent) inset}
+
+/* ITEM */
+.aitem{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--bg);border-radius:var(--rs);border:1px solid transparent;margin-bottom:4px;cursor:grab;transition:border-color .2s,opacity .2s,transform .2s,box-shadow .15s}
+.aitem:hover{border-color:var(--border)}
+.aitem.dragging{opacity:.4;cursor:grabbing;box-shadow:var(--shadow-lg);transform:scale(1.01)}
+.aitem.drag-ghost{background:var(--accent-light);border-color:var(--accent)}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.aitem.entering{animation:slideIn .22s ease both}
+.aitem.leaving{opacity:0;transform:translateX(8px)}
+
+.drag-handle{color:var(--border);font-size:13px;cursor:grab;flex-shrink:0;line-height:1;padding-right:2px;user-select:none}
+.aitem:hover .drag-handle{color:var(--muted)}
+
+.ilbl-inp{flex:1;min-width:0;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none}
+.ilbl-inp:focus{color:var(--accent)}
+.ilbl-static{flex:1;font-size:13px;color:var(--text)}
+.iamt-inp{width:82px;text-align:right;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--accent);outline:none;cursor:pointer;padding:2px 4px;border-radius:4px;transition:background .15s}
+.iamt-inp:focus{background:var(--accent-light);cursor:text}
+.rm-btn{width:20px;height:20px;flex-shrink:0;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.rm-btn:hover{background:var(--red-light);border-color:var(--red);color:var(--red)}
+
+.add-btn{width:100%;display:flex;align-items:center;gap:6px;background:none;border:1.5px dashed var(--border);border-radius:var(--rs);padding:7px 12px;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;transition:all .18s;margin-top:2px}
+.add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+
+.apply-btn{margin-top:18px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);padding:10px 24px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s,transform .15s}
+.apply-btn:hover{background:#B84E1F;transform:translateY(-1px)}
+
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:7px 16px;border-radius:100px;font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s;color:var(--muted)}
+.tab:hover{border-color:var(--accent);color:var(--accent)}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab.five-w{position:relative}
+.tab.five-w::after{content:'5W';position:absolute;top:-6px;right:-4px;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:4px;padding:1px 4px}
+
+/* MONTH DETAIL */
+.mdet{display:none}.mdet.active{display:block;animation:fadeUp .3s ease}
+.etbl{width:100%;border-collapse:collapse}
+.etbl tr:not(:last-child) td{border-bottom:1px solid var(--border)}
+.etbl td{padding:10px 4px;font-size:14px}
+.etbl td:last-child{text-align:right;font-weight:500}
+.etbl .sctn td{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding-top:16px;padding-bottom:6px}
+.etbl .total td{font-weight:600;font-size:15px;padding-top:14px}
+.etbl .total td:last-child{color:var(--green)}
+.etbl .neg-total td:last-child{color:var(--red)!important}
+.bdg-oo{display:inline-block;background:var(--amber-light);color:var(--amber);font-size:10px;font-weight:600;border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle}
+.bdg-5w{display:inline-block;background:var(--amber-light);color:var(--amber);font-size:10px;font-weight:600;border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle}
+
+/* CHART */
+.chart-wrap{position:relative;height:240px}
+
+/* DEBT PROGRESS */
+.debt-list{display:flex;flex-direction:column;gap:20px}
+.di-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.di-name{font-size:14px;font-weight:500}
+.di-amounts{display:flex;gap:12px;align-items:center}
+.di-edit-group{display:flex;gap:4px;align-items:center}
+.di-edit-lbl{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.di-edit-inp{width:76px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--accent);text-align:right;padding:3px 6px;outline:none;transition:border-color .15s}
+.di-edit-inp:focus{border-color:var(--accent);background:var(--accent-light)}
+.ptk{height:8px;background:var(--surface2);border-radius:100px;overflow:hidden}
+.pfill{height:100%;border-radius:100px;transition:width 1s cubic-bezier(.34,1.56,.64,1);width:0}
+.pfill.loan{background:linear-gradient(90deg,#E8652A,#F0925A)}
+.pfill.phone{background:linear-gradient(90deg,#2A7DC4,#5AABF0)}
+.pfill.suit{background:linear-gradient(90deg,#7A5AF8,#A885FF)}
+.di-meta{display:flex;justify-content:space-between;margin-top:5px}
+.di-meta span{font-size:11px;color:var(--muted)}
+.di-meta strong{color:var(--text);font-weight:600}
+/* FREQUENCY SELECTOR */
+.freq-sel{border:1px solid var(--border);border-radius:5px;background:var(--surface2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:var(--text);padding:3px 6px;outline:none;cursor:pointer;transition:border-color .15s,background .15s;margin-left:2px}
+.freq-sel:focus,.freq-sel:hover{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+
+/* WEEKLY BREAKDOWN */
+.wk-toggle{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;background:var(--accent-light);border:1px solid rgba(212,98,42,.2);border-radius:4px;padding:2px 8px;margin-left:8px;vertical-align:middle;user-select:none;transition:all .15s}
+.wk-toggle:hover{background:#f8e0d4}
+.wk-panel{overflow:hidden;max-height:0;transition:max-height .3s ease,opacity .3s ease;opacity:0}
+.wk-panel.open{max-height:200px;opacity:1}
+.wk-grid{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 4px 0}
+.wk-cell{display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:7px 10px;min-width:72px;transition:border-color .15s}
+.wk-cell:hover{border-color:var(--accent)}
+.wk-lbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.wk-inp{width:60px;text-align:center;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--accent);outline:none}
+.wk-total-row{display:flex;justify-content:space-between;align-items:center;padding:6px 2px 0;border-top:1px solid var(--border);margin-top:4px}
+.wk-total-lbl{font-size:11px;color:var(--muted);font-weight:600}
+.wk-total-val{font-size:13px;font-weight:700;color:var(--text)}
+
+
+/* LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:760px){.two-col{grid-template-columns:1fr}}
+
+/* SAVINGS TRACKER */
+.sav-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+@media(max-width:600px){.sav-grid{grid-template-columns:1fr}}
+.sav-kpi{background:var(--bg);border-radius:var(--rs);border:1px solid var(--border);padding:14px 16px}
+.sav-kpi-lbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.sav-kpi-val{font-family:'Instrument Serif',serif;font-size:24px;line-height:1}
+.sav-kpi-val.pos{color:var(--green)}.sav-kpi-val.neg{color:var(--red)}.sav-kpi-val.neu{color:var(--text)}
+.sav-kpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+.sav-month-list{display:flex;flex-direction:column;gap:10px}
+.sav-month-row{display:flex;align-items:center;gap:10px}
+.sav-month-lbl{font-size:12px;font-weight:600;color:var(--text);width:52px;flex-shrink:0}
+.sav-bar-track{flex:1;height:10px;background:var(--surface2);border-radius:100px;overflow:hidden;position:relative}
+.sav-bar-emergency{height:100%;border-radius:100px;position:absolute;left:0;top:0;transition:width .9s cubic-bezier(.34,1.56,.64,1)}
+.sav-bar-savings{height:100%;border-radius:100px;position:absolute;top:0;transition:width .9s cubic-bezier(.34,1.56,.64,1),left .9s cubic-bezier(.34,1.56,.64,1)}
+.sav-month-amt{font-size:12px;font-weight:600;width:64px;text-align:right;flex-shrink:0}
+.sav-month-amt.pos{color:var(--green)}.sav-month-amt.neg{color:var(--red)}.sav-month-amt.zero{color:var(--muted)}
+
+.sav-legend{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.sav-leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.sav-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+.sav-settings{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.sav-settings label{font-size:12px;color:var(--muted);font-weight:500}
+.sav-inp{width:80px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--accent);text-align:right;padding:4px 8px;outline:none;transition:border-color .15s}
+.sav-inp:focus{border-color:var(--accent);background:var(--accent-light)}
+
+/* PAGE NAV */
+.page-nav{display:flex;gap:4px;background:var(--surface2);border-radius:100px;padding:4px;margin-bottom:32px;width:fit-content}
+.page-btn{padding:9px 24px;border-radius:100px;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;background:transparent;color:var(--muted)}
+.page-btn:hover{color:var(--text)}
+.page-btn.active{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.page{display:none}.page.active{display:block}
+
+/* DEBT CLOSURE PAGE */
+.dc-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:700px){.dc-summary{grid-template-columns:repeat(2,1fr)}}
+.dc-kpi{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);padding:20px}
+.dc-kpi-lbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.dc-kpi-val{font-family:'Instrument Serif',serif;font-size:26px;line-height:1.1}
+.dc-kpi-val.pos{color:var(--green)}.dc-kpi-val.neg{color:var(--red)}.dc-kpi-val.acc{color:var(--accent)}.dc-kpi-val.neu{color:var(--text)}
+.dc-kpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+.dc-boost-card{margin-bottom:20px}
+.dc-boost-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:660px){.dc-boost-row{grid-template-columns:1fr}}
+.dc-boost-lbl{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.03em}
+.dc-slider{flex:1;accent-color:var(--accent);cursor:pointer;height:4px}
+.dc-boost-val{font-size:16px;font-weight:700;color:var(--accent);min-width:52px;text-align:right}
+.dc-select{border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);padding:7px 10px;outline:none;cursor:pointer;width:100%;margin-top:6px;transition:border-color .15s}
+.dc-select:focus{border-color:var(--accent)}
+.dc-compare{margin-top:16px;padding:12px 16px;background:var(--green-light);border:1px solid rgba(42,125,92,.15);border-radius:var(--rs);font-size:13px;color:var(--green);display:none}
+.dc-compare.visible{display:block}
+
+/* TIMELINE */
+.dc-debt-block{margin-bottom:24px}
+.dc-debt-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.dc-debt-name{font-size:14px;font-weight:600;color:var(--text)}
+.dc-debt-meta{font-size:12px;color:var(--muted)}
+.dc-debt-meta strong{color:var(--accent)}
+.dc-timeline-track{position:relative;height:28px;background:var(--surface2);border-radius:100px;overflow:hidden}
+.dc-timeline-bar{height:100%;border-radius:100px;display:flex;align-items:center;padding-left:12px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;transition:width 1.2s cubic-bezier(.34,1.56,.64,1);width:0}
+.dc-timeline-label{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--muted)}
+.dc-month-ticks{display:flex;margin-top:4px;padding:0 2px}
+.dc-tick{flex:1;font-size:9px;color:var(--muted);text-align:center;border-left:1px solid var(--border);padding-top:2px}
+
+/* TABLE */
+.dc-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.dc-tbl th{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap}
+.dc-tbl th:first-child{text-align:left}
+.dc-tbl td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--border)}
+.dc-tbl td:first-child{text-align:left;font-weight:500}
+.dc-tbl tr:hover td{background:var(--bg)}
+.dc-tbl .paid-off td{color:var(--muted);background:var(--green-light)!important}
+.dc-tbl .paid-off td:first-child{color:var(--green);font-weight:600}
+.dc-tbl .zero{color:var(--muted)!important;font-weight:400!important}
+.dc-tbl .pos{color:var(--green)}.dc-tbl .neg{color:var(--red)}
+.dc-paid-badge{display:inline-block;background:var(--green-light);color:var(--green);font-size:10px;font-weight:700;border-radius:4px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+
+
+.sync-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;transition:all .3s;background:var(--surface);border:1px solid var(--border)}.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.sync-pill.saved .sync-dot{background:#2A7D5C}.sync-pill.saving .sync-dot{background:#C47D1A;animation:pulse 1s infinite}.sync-pill.offline .sync-dot{background:#7B7B8F}.sync-pill.error .sync-dot{background:#C4373A}.sync-pill.saved{border-color:rgba(42,125,92,.2);color:#2A7D5C}.sync-pill.saving{color:#C47D1A}.sync-pill.offline{color:var(--muted)}.sync-pill.error{color:#C4373A}@supports(padding:max(0px)){body{padding-bottom:max(60px,env(safe-area-inset-bottom))}}@media(max-width:480px){.page-btn{padding:10px 16px}.tab{padding:9px 14px}.hdr-title{font-size:30px}body{padding:20px 14px 60px}}.footer-note{text-align:center;font-size:12px;color:var(--muted);margin-top:32px;padding-top:20px;border-top:1px solid var(--border)}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.ok-callout{background:var(--green-light);border:1px solid rgba(42,125,92,.15);border-radius:var(--rs);padding:12px 16px;margin-top:14px;font-size:13px;color:var(--green);display:flex;gap:8px;align-items:center}
+.warn-callout{background:var(--amber-light);border:1px solid rgba(196,125,26,.15);border-radius:var(--rs);padding:12px 16px;margin-top:14px;font-size:13px;color:var(--amber);display:flex;gap:8px;align-items:center}
+</style>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── YOUR FIREBASE CONFIG ──────────────────────────────────────────────────────
+  // Replace these values after creating your Firebase project (see README.md)
+  const firebaseConfig = {
+    apiKey:            "AIzaSyCa6QhdWNzjfxoqc_Hpjg__geqaStG7lm4",
+    authDomain:        "my-budget-ed429.firebaseapp.com",
+    projectId:         "my-budget-ed429",
+    storageBucket:     "my-budget-ed429.firebasestorage.app",
+    messagingSenderId: "309077309911",
+    appId:             "1:309077309911:web:ba25842b4581cb395a7392"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const REF = doc(db, "budget", "main");
+
+  window._fbSave = async (data) => {
+    try { await setDoc(REF, { ...data, updatedAt: serverTimestamp() }); setSyncStatus('saved'); }
+    catch(e) { setSyncStatus('error'); console.error(e); }
+  };
+  window._fbListen = (cb) => onSnapshot(REF,
+    snap => { if(snap.exists()) cb(snap.data()); },
+    err  => { console.warn(err); setSyncStatus('offline'); }
+  );
+  function setSyncStatus(s){ window._syncStatus=s; window.updateSyncUI&&window.updateSyncUI(s); }
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(console.warn);
+</script>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">Your <span>Budget</span><br>Dashboard</div>
+      <div class="hdr-sub" id="hdrSub"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+      <div class="hdr-badge"><span class="dot"></span><span id="hdrBadge">Live · 6-month view</span></div>
+      <div class="sync-pill offline" id="syncPill"><div class="sync-dot"></div><span id="syncTxt">Connecting…</span></div>
+    </div>
+  </div>
+
+  <!-- PAGE NAV -->
+  <div class="page-nav">
+    <button class="page-btn active" id="navMonthly" onclick="switchPage('monthly')">📅 Monthly Budget</button>
+    <button class="page-btn" id="navForecast" onclick="switchPage('forecast')">📊 6-Month Forecast</button>
+    <button class="page-btn" id="navDebt" onclick="switchPage('debt')">🎯 Debt Closure Plan</button>
+  </div>
+
+  <!-- ══ PAGE 1: MONTHLY BUDGET ══ -->
+  <div class="page active" id="pageMonthly">
+
+    <!-- ASSUMPTIONS -->
+    <div class="card">
+      <div class="atoggle" onclick="toggleA()">
+        <div class="card-title" style="margin-bottom:0">Edit Assumptions</div>
+        <div class="ticon" id="ticon">▾</div>
+      </div>
+      <div class="abody" id="abody">
+        <div id="ainner"></div>
+        <button class="apply-btn" onclick="applyA()">Apply Changes &amp; Recalculate</button>
+      </div>
+    </div>
+
+    <!-- MONTHLY BREAKDOWN -->
+    <div class="card">
+      <div class="card-title">Monthly Breakdown</div>
+      <div class="tabs" id="tabs"></div>
+      <div id="mdets"></div>
+    </div>
+
+    <div class="footer-note" style="margin-top:20px">
+      ✦ Drag items between sections &nbsp;·&nbsp; Click any value to edit &nbsp;·&nbsp; Hit "Apply Changes" to recalculate<br>
+      5W badge = month with 5 Friday loan deductions
+    </div>
+  </div>
+
+  <!-- ══ PAGE 2: 6-MONTH FORECAST ══ -->
+  <div class="page" id="pageForecast">
+
+    <!-- KPI SUMMARY -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- CHART + DEBT -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Net Remaining — 6 Months</div>
+        <div class="chart-wrap"><canvas id="netChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Debt Payoff Progress</div>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:14px">Edit <strong>Total</strong> and <strong>Remaining</strong> inline — progress bars update instantly.</p>
+        <div class="debt-list" id="debtList"></div>
+      </div>
+    </div>
+
+    <!-- SAVINGS TRACKER -->
+    <div class="card" id="savingsCard">
+      <div class="card-title">Savings Tracker</div>
+      <div class="sav-settings">
+        <label>Emergency fund buffer</label>
+        <input class="sav-inp" type="number" id="emergencyTarget" value="500" step="50" oninput="renderSavings(getMonths());if(currentPage==='debt')renderDebtClosure();">
+        <label style="margin-left:8px;color:var(--muted);font-size:12px">— leftover above this goes to savings</label>
+      </div>
+      <div class="sav-grid" id="savKpis"></div>
+      <div class="sav-legend">
+        <div class="sav-leg-item"><div class="sav-leg-dot" style="background:#F0925A"></div>Emergency Fund</div>
+        <div class="sav-leg-item"><div class="sav-leg-dot" style="background:#43C99A"></div>Savings</div>
+        <div class="sav-leg-item"><div class="sav-leg-dot" style="background:#E8E7E2"></div>Nothing left</div>
+      </div>
+      <div class="sav-month-list" id="savMonths"></div>
+    </div>
+
+    <div class="footer-note" style="margin-top:20px">
+      ✦ Switch to Monthly Budget to edit assumptions and weekly spending
+    </div>
+  </div>
+
+  <!-- ══ PAGE 3: DEBT CLOSURE PLAN ══ -->
+  <div class="page" id="pageDebt">
+
+    <!-- SUMMARY STRIP -->
+    <div class="dc-summary" id="dcSummary"></div>
+
+    <!-- EXTRA REPAYMENT SLIDER -->
+    <div class="card dc-boost-card">
+      <div class="card-title">Accelerate Payoff</div>
+      <div class="dc-boost-row">
+        <div class="dc-boost-item">
+          <label class="dc-boost-lbl">Extra monthly payment towards debt</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+            <span style="font-size:13px;color:var(--muted)">$0</span>
+            <input type="range" id="boostSlider" min="0" max="1000" step="10" value="0" class="dc-slider" oninput="onBoostChange()">
+            <span style="font-size:13px;color:var(--muted)">$1,000</span>
+            <span class="dc-boost-val" id="boostVal">$0</span>
+          </div>
+        </div>
+        <div class="dc-boost-item">
+          <label class="dc-boost-lbl">Repayment priority</label>
+          <select id="priorityMode" class="dc-select" onchange="dcState.priority=this.value;renderDebtClosure()">
+            <option value="avalanche">Avalanche — highest balance first</option>
+            <option value="snowball">Snowball — lowest balance first</option>
+            <option value="equal">Split equally across all debts</option>
+          </select>
+        </div>
+      </div>
+      <div class="dc-compare" id="dcCompare"></div>
+    </div>
+    <!-- DEBT TIMELINE -->
+    <div class="card">
+      <div class="card-title">Debt Payoff Timeline</div>
+      <div id="dcTimeline"></div>
+    </div>
+
+    <!-- MONTH-BY-MONTH TABLE -->
+    <div class="card">
+      <div class="card-title">Month-by-Month Projection</div>
+      <div id="dcTable" style="overflow-x:auto"></div>
+    </div>
+
+    <div class="footer-note" style="margin-top:20px">
+      ✦ Projections use your actual budget data — update assumptions on Monthly Budget page to see changes here
+    </div>
+  </div>
+</div>
+
+<script>
+// ── ID ────────────────────────────────────────────────────────────────────────
+let _uid=100; const nid=()=>++_uid;
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+let sections={
+  income:[  {id:nid(),label:'Monthly Salary',amount:4800,locked:true} ],
+  fixed:[
+    {id:nid(),label:'Rent',amount:970},
+    {id:nid(),label:'Money to Parents',amount:480},
+    {id:nid(),label:'Insurance',amount:139},
+    {id:nid(),label:'Gym',amount:92},
+    {id:nid(),label:'Wifi',amount:29.75},
+    {id:nid(),label:'Mobile Plan',amount:35},
+  ],
+  variable:[ {id:nid(),label:'Grocery + Transport + Eating Out',amount:400,weeklyData:{}} ],
+  debt:[
+    {id:nid(),label:'Personal Loan (weekly)',amount:90,subtype:'weekly',locked:true},
+    {id:nid(),label:'Latitude Phone (monthly)',amount:80.07,subtype:'monthly'},
+  ],
+  oneoff:[
+    {id:nid(),label:'Afterpay (Apr)',amount:276.23},
+    {id:nid(),label:'Latitude CC (Apr)',amount:294},
+    {id:nid(),label:'Suit (÷6 from May)',amount:500,subtype:'suit'},
+  ]
+};
+
+// Debt tracker — now editable
+let debtTracker=[
+  {id:'dt_loan', name:'Personal Loan',             total:4000,  remaining:3256.08, cls:'loan',  payoff:'Jan 2027', mo:()=>{ const li=sections.debt.find(x=>x.subtype==='weekly'); return li?`$${li.amount*4}–$${li.amount*5}/mo`:''; } },
+  {id:'dt_phone',name:'Latitude Phone Installment',total:960.95,remaining:715.39,  cls:'phone', payoff:'Jan 2027', mo:()=>{ const li=sections.debt.find(x=>x.subtype!=='weekly'&&x.subtype!=='suit'); return li?`$${li.amount}/mo`:''; } },
+  {id:'dt_suit', name:'Latitude CC (Suit)',         total:500,   remaining:500,     cls:'suit',  payoff:'Oct 2026', mo:()=>{ const li=sections.oneoff.find(x=>x.subtype==='suit')||sections.debt.find(x=>x.subtype==='suit'); return li?`$${(li.amount/6).toFixed(2)}/mo`:''; } },
+];
+
+
+// ── LIVE DEBT TRACKER — derives from sections, stays in sync ─────────────────
+// debtStore: persists total/remaining between renders, keyed by stable ID
+const debtStore = {};
+function getOrCreate(id, defaults){
+  if(!debtStore[id]) debtStore[id] = {...defaults};
+  return debtStore[id];
+}
+
+function getActiveDebtTracker(){
+  const active = [];
+
+  // 1. Weekly loan items from sections.debt
+  sections.debt.filter(x=>x.subtype==='weekly').forEach(x=>{
+    const storeId = 'dts_'+x.id;
+    // Seed from legacy debtTracker if first time
+    if(!debtStore[storeId]){
+      const leg = debtTracker.find(d=>d.id==='dt_loan');
+      debtStore[storeId] = {total: leg?leg.total:x.amount*12, remaining: leg?leg.remaining:x.amount*12, cls:'loan', payoff:'Jan 2027'};
+    }
+    const s = debtStore[storeId];
+    active.push({ id:storeId, name:x.label, total:s.total, remaining:s.remaining,
+      cls:s.cls, payoff:s.payoff, subtype:'weekly', srcItem:x,
+      mo:()=>`$${x.amount*4}–$${x.amount*5}/mo` });
+  });
+
+  // 2. Monthly debt items (fortnightly treated same)
+  sections.debt.filter(x=>x.subtype!=='weekly'&&x.subtype!=='suit'&&x.subtype!=='plan').forEach(x=>{
+    const storeId = 'dts_'+x.id;
+    if(!debtStore[storeId]){
+      const leg = debtTracker.find(d=>d.id==='dt_phone');
+      debtStore[storeId] = {total: leg?leg.total:x.amount*12, remaining: leg?leg.remaining:x.amount*12, cls:'phone', payoff:'Jan 2027'};
+    }
+    const s = debtStore[storeId];
+    const freq = x.subtype==='fortnightly'?2:1;
+    active.push({ id:storeId, name:x.label, total:s.total, remaining:s.remaining,
+      cls:s.cls, payoff:s.payoff, subtype:x.subtype||'monthly', srcItem:x,
+      mo:()=>`$${(x.amount*freq).toFixed(2)}/mo` });
+  });
+
+  // 3. Suit / payment-plan items from oneoff or debt
+  const suitSrc = [
+    ...sections.oneoff.filter(x=>x.subtype==='suit'),
+    ...sections.debt.filter(x=>x.subtype==='suit'||x.subtype==='plan')
+  ];
+  suitSrc.forEach(x=>{
+    const storeId = 'dts_'+x.id;
+    if(!debtStore[storeId]){
+      const leg = debtTracker.find(d=>d.id==='dt_suit');
+      debtStore[storeId] = {total: x.amount, remaining: leg&&leg.remaining<=x.amount?leg.remaining:x.amount, cls:'suit', payoff:'Oct 2026'};
+    }
+    const s = debtStore[storeId];
+    active.push({ id:storeId, name:x.label, total:s.total, remaining:s.remaining,
+      cls:s.cls, payoff:s.payoff, subtype:'suit', srcItem:x,
+      mo:()=>`$${(x.amount/6).toFixed(2)}/mo` });
+  });
+
+  return active;
+}
+const SCFG={
+  income:{label:'Income',            add:'Add income source'},
+  fixed: {label:'Fixed Expenses',    add:'Add fixed expense'},
+  variable:{label:'Variable (per week ×4)', add:'Add variable item'},
+  debt:  {label:'Debt Repayments',   add:'Add debt'},
+  oneoff:{label:'One-Off / April',   add:'Add one-off item'},
+};
+const COL_LAYOUT=[['income','fixed'],['variable','debt'],['oneoff']];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const fmt=n=>{
+  if(n===0)return'—';
+  const s=Math.abs(n).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return(n<0?'-$':'$')+s;
+};
+function countFridays(y,m){
+  let c=0,days=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=days;d++)if(new Date(y,m,d).getDay()===5)c++;
+  return c;
+}
+function getMonths(){
+  const now=new Date(); let sy=now.getFullYear(),sm=now.getMonth();
+  if(sy===2026&&sm===2)sm=3;
+  return Array.from({length:6},(_,i)=>({year:sy+Math.floor((sm+i)/12),month:(sm+i)%12}));
+}
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const isApr26=(y,m)=>y===2026&&m===3;
+const isSuit=(y,m)=>y===2026&&m>=4&&m<=9;
+
+// ── CALC ──────────────────────────────────────────────────────────────────────
+function calcMonth(y,m){
+  const fri=countFridays(y,m);
+  const salary=sections.income.reduce((s,x)=>s+x.amount,0);
+  const fixed=sections.fixed.reduce((s,x)=>s+x.amount,0);
+  const mkey=y+'-'+m;
+  const variable=sections.variable.reduce((s,x)=>{
+    const wd=x.weeklyData&&x.weeklyData[mkey];
+    return s+(wd?wd.reduce((a,b)=>a+b,0):x.amount*countFridays(y,m));
+  },0);
+  const loanItem=sections.debt.find(x=>x.subtype==='weekly');
+  const loanAmt=loanItem?loanItem.amount*fri:0;
+  // weekly counted above | fortnightly=×2/mo | monthly=flat | plan=÷months
+  const otherDebt=sections.debt.filter(x=>x.subtype!=='weekly').reduce((s,x)=>{
+    if(x.subtype==='suit') return s+(isSuit(y,m)?x.amount/6:0);
+    if(x.subtype==='plan') return s+x.amount; // flat monthly instalment
+    if(x.subtype==='fortnightly') return s+x.amount*2;
+    return s+x.amount; // monthly
+  },0);
+  let oneoff=0;
+  sections.oneoff.forEach(x=>{
+    if(x.subtype==='suit'){if(isSuit(y,m))oneoff+=x.amount/6;}
+    else{if(isApr26(y,m))oneoff+=x.amount;}
+  });
+  // Also handle suit-type items that may have been dragged into debt section
+  sections.debt.filter(x=>x.subtype==='suit').forEach(x=>{
+    if(isSuit(y,m))oneoff+=x.amount/6;
+  });
+  const debt=loanAmt+otherDebt;
+  const totalExp=fixed+variable+debt+oneoff;
+  return{salary,fixed,variable,loanAmt,otherDebt,oneoff,debt,totalExp,net:salary-totalExp,fri};
+}
+
+// ── DRAG STATE ────────────────────────────────────────────────────────────────
+let dragState=null; // {itemId, fromKey, el}
+
+function onDragStart(e,key,itemId,el){
+  dragState={itemId,fromKey:key,el};
+  el.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',itemId);
+}
+function onDragEnd(e,el){
+  el.classList.remove('dragging');
+  document.querySelectorAll('.alist').forEach(l=>l.classList.remove('drag-over'));
+}
+function onDragOver(e,key){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  document.querySelectorAll('.alist').forEach(l=>l.classList.remove('drag-over'));
+  document.getElementById('alist_'+key).classList.add('drag-over');
+}
+function onDragLeave(key){
+  document.getElementById('alist_'+key).classList.remove('drag-over');
+}
+function onDrop(e,toKey){
+  e.preventDefault();
+  document.querySelectorAll('.alist').forEach(l=>l.classList.remove('drag-over'));
+  if(!dragState||dragState.fromKey===toKey)return;
+  const {itemId,fromKey}=dragState;
+  const idx=sections[fromKey].findIndex(x=>x.id===itemId);
+  if(idx===-1)return;
+  const [item]=sections[fromKey].splice(idx,1);
+  sections[toKey].push(item);
+  dragState=null;
+  renderA();
+}
+
+// ── BUILD ITEM EL ─────────────────────────────────────────────────────────────
+function buildItem(key,item){
+  const div=document.createElement('div');
+  div.className='aitem entering';
+  div.id='aitem_'+item.id;
+  div.draggable=true;
+  div.addEventListener('dragstart',e=>onDragStart(e,key,item.id,div));
+  div.addEventListener('dragend',e=>onDragEnd(e,div));
+
+  // Drag handle
+  const dh=document.createElement('span');
+  dh.className='drag-handle';
+  dh.innerHTML='&#8942;&#8942;';
+  dh.title='Drag to move between sections';
+  div.appendChild(dh);
+
+  // Label
+  if(item.locked){
+    const s=document.createElement('span');
+    s.className='ilbl-static';
+    s.textContent=item.label;
+    div.appendChild(s);
+  } else {
+    const li=document.createElement('input');
+    li.type='text';li.className='ilbl-inp';li.value=item.label;li.placeholder='Label';
+    li.addEventListener('change',()=>item.label=li.value);
+    div.appendChild(li);
+  }
+
+  // Amount
+  const ai=document.createElement('input');
+  ai.type='number';ai.className='iamt-inp';ai.step='0.01';ai.value=item.amount;ai.id='amt_'+item.id;
+  div.appendChild(ai);
+
+  // Frequency selector for debt items
+  if(key==='debt' && !item.locked){
+    const fs=document.createElement('select');
+    fs.className='freq-sel';
+    fs.id='freq_'+item.id;
+    [['weekly','Weekly'],['fortnightly','Fortnightly'],['monthly','Monthly'],['plan','Payment Plan']].forEach(([v,l])=>{
+      const o=document.createElement('option');
+      o.value=v;o.textContent=l;
+      if((item.subtype||'monthly')===v)o.selected=true;
+      fs.appendChild(o);
+    });
+    fs.addEventListener('change',()=>{
+      item.subtype=fs.value;
+    });
+    div.appendChild(fs);
+  } else if(key==='debt' && item.locked){
+    // Show locked weekly badge
+    const fb=document.createElement('span');
+    fb.style.cssText='font-size:10px;font-weight:700;color:#C47D1A;background:#FDF4E3;border:1px solid rgba(196,125,26,.3);border-radius:5px;padding:2px 6px;white-space:nowrap';
+    fb.textContent='Weekly';
+    div.appendChild(fb);
+  }
+
+  // Remove
+  if(item.locked){
+    const sp=document.createElement('div');sp.style.width='20px';div.appendChild(sp);
+  } else {
+    const rb=document.createElement('button');
+    rb.className='rm-btn';rb.innerHTML='&times;';rb.title='Remove';
+    rb.addEventListener('click',()=>{
+      div.classList.add('leaving');
+      setTimeout(()=>{sections[key]=sections[key].filter(x=>x.id!==item.id);div.remove();},200);
+    });
+    div.appendChild(rb);
+  }
+  return div;
+}
+
+// ── RENDER ASSUMPTIONS ────────────────────────────────────────────────────────
+function renderA(){
+  const grid=document.createElement('div');
+  grid.className='agrid';
+  COL_LAYOUT.forEach(keys=>{
+    const col=document.createElement('div');
+    keys.forEach(key=>{
+      const cfg=SCFG[key];
+      const grp=document.createElement('div');grp.className='agroup';
+      const lbl=document.createElement('div');lbl.className='agroup-lbl';lbl.textContent=cfg.label;
+      grp.appendChild(lbl);
+      const list=document.createElement('div');
+      list.className='alist';list.id='alist_'+key;
+      list.addEventListener('dragover',e=>onDragOver(e,key));
+      list.addEventListener('dragleave',()=>onDragLeave(key));
+      list.addEventListener('drop',e=>onDrop(e,key));
+      sections[key].forEach(item=>list.appendChild(buildItem(key,item)));
+      grp.appendChild(list);
+      const ab=document.createElement('button');
+      ab.className='add-btn';
+      ab.innerHTML=`<span style="font-size:16px;line-height:1">+</span> ${cfg.add}`;
+      ab.addEventListener('click',()=>{
+        const item={id:nid(),label:'New Item',amount:0,subtype:key==='debt'?'monthly':undefined};
+        sections[key].push(item);
+        const el=buildItem(key,item);
+        list.appendChild(el);
+        const li=el.querySelector('.ilbl-inp');
+        if(li)setTimeout(()=>{li.focus();li.select();},30);
+      });
+      grp.appendChild(ab);
+      col.appendChild(grp);
+    });
+    grid.appendChild(col);
+  });
+  const inner=document.getElementById('ainner');
+  inner.innerHTML='';inner.appendChild(grid);
+}
+
+function applyA(){
+  Object.keys(sections).forEach(key=>{
+    sections[key].forEach(item=>{
+      const inp=document.getElementById('amt_'+item.id);
+      if(inp)item.amount=parseFloat(inp.value)||0;
+      const fs=document.getElementById('freq_'+item.id);
+      if(fs)item.subtype=fs.value;
+    });
+  });
+  renderAll();
+  saveToFirebase();
+  const btn=document.querySelector('.apply-btn');
+  btn.textContent='✓ Updated!';btn.style.background='#2A7D5C';
+  setTimeout(()=>{btn.textContent='Apply Changes & Recalculate';btn.style.background='';},1800);
+}
+
+// ── KPIs ──────────────────────────────────────────────────────────────────────
+function renderKPIs(months){
+  const R=months.map(({year,month})=>calcMonth(year,month));
+  const ti=R.reduce((s,r)=>s+r.salary,0),te=R.reduce((s,r)=>s+r.totalExp,0);
+  const tn=R.reduce((s,r)=>s+r.net,0),av=tn/6;
+  document.getElementById('kpiGrid').innerHTML=[
+    {lbl:'6-Month Income',  val:fmt(ti),cls:'neu',   sub:'Total salary'},
+    {lbl:'6-Month Expenses',val:fmt(te),cls:'acc',   sub:'All costs inc. debt'},
+    {lbl:'6-Month Net',     val:fmt(tn),cls:tn>=0?'pos':'neg',sub:'Total leftover'},
+    {lbl:'Avg Monthly Left',val:fmt(av),cls:av>=0?'pos':'neg',sub:'Per month average'},
+  ].map(k=>`<div class="kpi"><div class="kpi-lbl">${k.lbl}</div><div class="kpi-val ${k.cls}">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+let activeTab=0;
+function renderTabs(months){
+  document.getElementById('tabs').innerHTML=months.map(({year,month},i)=>{
+    const is5=countFridays(year,month)===5;
+    return`<div class="tab ${is5?'five-w':''} ${i===activeTab?'active':''}" onclick="switchTab(${i})">${MS[month]} ${year}</div>`;
+  }).join('');
+
+  document.getElementById('mdets').innerHTML=months.map(({year,month},i)=>{
+    const mkey=year+'-'+month;
+    const r=calcMonth(year,month);
+    const callout=r.net>=500
+      ?`<div class="ok-callout">&#x1F49A; Strong month — consider saving <strong>${fmt(r.net-200)}</strong>.</div>`
+      :r.net<0
+      ?`<div class="warn-callout">&#x26A0; Deficit of <strong>${fmt(Math.abs(r.net))}</strong> this month.</div>`
+      :`<div class="warn-callout">&#x26A0; Tight month — <strong>${fmt(r.net)}</strong> remaining.</div>`;
+
+    const loanItem=sections.debt.find(x=>x.subtype==='weekly');
+    let rows=[];
+    rows.push({s:'INCOME'});
+    sections.income.forEach(x=>rows.push({label:x.label,val:x.amount,pos:true}));
+    rows.push({s:'FIXED EXPENSES'});
+    sections.fixed.forEach(x=>rows.push({label:x.label,val:-x.amount}));
+    rows.push({s:'VARIABLE EXPENSES'});
+    sections.variable.forEach(x=>{
+      const wd=x.weeklyData&&x.weeklyData[mkey];
+      const total=wd?wd.reduce((a,b)=>a+b,0):x.amount*r.fri;
+      const note=wd?`actual: ${wd.map((v,i)=>'W'+(i+1)+':$'+v).join(', ')}`:`$${x.amount}/wk×${r.fri}`;
+      rows.push({label:x.label,val:-total,note,hasWeekly:!!wd,itemId:x.id,weekCount:r.fri});
+    });
+    rows.push({s:'DEBT & REPAYMENTS'});
+    if(loanItem)rows.push({label:loanItem.label,val:-(loanItem.amount*r.fri),badge:r.fri===5?'5W':null});
+    sections.debt.filter(x=>x.subtype!=='weekly'&&x.subtype!=='suit').forEach(x=>rows.push({label:x.label,val:-x.amount}));
+    sections.debt.filter(x=>x.subtype==='suit').forEach(x=>{if(isSuit(year,month))rows.push({label:x.label,val:-(x.amount/6),note:`÷6`});});
+    const aprOO=sections.oneoff.filter(x=>x.subtype!=='suit'&&isApr26(year,month));
+    const suitOO=sections.oneoff.filter(x=>x.subtype==='suit'&&isSuit(year,month));
+    if(aprOO.length||suitOO.length){
+      rows.push({s:'ONE-OFF'});
+      aprOO.forEach(x=>rows.push({label:x.label,val:-x.amount,badge:'ONE-OFF'}));
+      suitOO.forEach(x=>rows.push({label:x.label,val:-(x.amount/6),note:`÷6`}));
+    }
+    const trs=rows.map(row=>{
+      if(row.s)return`<tr class="sctn"><td colspan="2">${row.s}</td></tr>`;
+      const bdg=row.badge?`<span class="${row.badge==='5W'?'bdg-5w':'bdg-oo'}">${row.badge}</span>`:'';
+      // Variable items get a weekly breakdown toggle
+      if(row.itemId!==undefined){
+        const item=sections.variable.find(x=>x.id===row.itemId);
+        const wd=(item&&item.weeklyData&&item.weeklyData[mkey])||Array(row.weekCount).fill(item?item.amount:0);
+        const panelId='wkp_'+row.itemId+'_'+mkey.replace('-','_');
+        const wkCells=wd.map((v,wi)=>`
+          <div class="wk-cell">
+            <span class="wk-lbl">Week ${wi+1}</span>
+            <input class="wk-inp" type="number" step="0.01" value="${v}"
+              oninput="updateWeek('${row.itemId}','${mkey}',${wi},this.value,'${panelId}',${year},${month})">
+          </div>`).join('');
+        const wkSum=wd.reduce((a,b)=>a+(+b||0),0);
+        return`<tr>
+          <td>${row.label}<span class="wk-toggle" onclick="toggleWk('${panelId}')">&#128197; Weekly</span></td>
+          <td id="wkval_${row.itemId}_${mkey.replace('-','_')}" style="color:var(--red)">${fmt(row.val)}</td>
+        </tr>
+        <tr><td colspan="2" style="padding:0">
+          <div class="wk-panel" id="${panelId}">
+            <div class="wk-grid">${wkCells}</div>
+            <div class="wk-total-row">
+              <span class="wk-total-lbl">Monthly Total</span>
+              <span class="wk-total-val" id="wktot_${row.itemId}_${mkey.replace('-','_')}">${fmt(wkSum)}</span>
+            </div>
+          </div>
+        </td></tr>`;
+      }
+      const nt=row.note&&!row.badge?`<span style="font-size:11px;color:var(--muted);margin-left:6px">(${row.note})</span>`:'';
+      return`<tr><td>${row.label}${bdg}${nt}</td><td style="${row.pos?'color:var(--green)':''}">${fmt(row.val)}</td></tr>`;
+    }).join('');
+    return`<div class="mdet ${i===activeTab?'active':''}" id="det_${i}">
+      <table class="etbl">${trs}
+        <tr><td colspan="2"><div class="divider"></div></td></tr>
+        <tr class="total ${r.net<0?'neg-total':''}"><td>NET REMAINING</td><td>${fmt(r.net)}</td></tr>
+      </table>${callout}</div>`;
+  }).join('');
+}
+function switchTab(i){activeTab=i;const m=getMonths();renderTabs(m);renderDebt(m);}
+
+// ── CHART ─────────────────────────────────────────────────────────────────────
+let chartInst=null;
+function renderChart(months){
+  const nets=months.map(({year,month})=>+calcMonth(year,month).net.toFixed(2));
+  const labels=months.map(({year,month})=>`${MS[month]} ${year}`);
+  if(chartInst)chartInst.destroy();
+  chartInst=new Chart(document.getElementById('netChart').getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:[{label:'Net Remaining',data:nets,
+      backgroundColor:nets.map(n=>n>=0?'rgba(42,125,92,.85)':'rgba(196,55,58,.85)'),
+      borderColor:nets.map(n=>n>=0?'#2A7D5C':'#C4373A'),
+      borderWidth:1.5,borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>' '+fmt(c.parsed.y)},backgroundColor:'#1C1C28',titleColor:'#fff',bodyColor:'#ccc',padding:10,cornerRadius:8}},
+      scales:{
+        y:{grid:{color:'#EBEBEB'},ticks:{font:{family:'DM Sans',size:11},color:'#7B7B8F',callback:v=>'$'+v.toLocaleString()}},
+        x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11},color:'#7B7B8F'}}}}});
+}
+
+// ── DEBT PROGRESS ─────────────────────────────────────────────────────────────
+function renderDebt(months){
+  const debtTracker=getActiveDebtTracker();
+  const upTo=months.slice(0,activeTab+1);
+  const lw=sections.debt.find(x=>x.subtype==='weekly')?.amount||0;
+  const pm=sections.debt.filter(x=>x.subtype!=='weekly'&&x.subtype!=='suit').reduce((s,x)=>s+x.amount,0);
+  const suitAmt=(sections.oneoff.find(x=>x.subtype==='suit')||sections.debt.find(x=>x.subtype==='suit'))?.amount||0;
+
+  const loanPaid=upTo.reduce((s,{year,month})=>s+lw*countFridays(year,month),0);
+  const phonePaid=upTo.length*pm;
+  const suitPaid=upTo.filter(({year,month})=>isSuit(year,month)).length*(suitAmt/6);
+
+  const tag=`${MS[months[activeTab].month]} ${months[activeTab].year}`;
+  const list=document.getElementById('debtList');
+  list.innerHTML=`<div style="font-size:11px;color:var(--muted);margin-bottom:10px">&#x1F4CD; Balance after <strong style="color:var(--text)">${tag}</strong></div>`;
+
+  debtTracker.forEach(dt=>{
+    let paid=0;
+    if(dt.subtype==='weekly') paid=loanPaid;
+    else if(dt.subtype==='suit') paid=suitPaid;
+    else paid=upTo.length*(dt.srcItem?dt.srcItem.amount:0);
+    const rem=Math.max(0,dt.remaining-paid);
+    const pct=dt.total>0?Math.min(100,(paid/dt.remaining)*100):0;
+
+    const div=document.createElement('div');
+    div.innerHTML=`
+      <div class="di-header">
+        <div class="di-name">${dt.name}</div>
+        <div class="di-amounts">
+          <div class="di-edit-group">
+            <span class="di-edit-lbl">Total</span>
+            <input class="di-edit-inp" type="number" step="0.01" value="${dt.total}" data-dtid="${dt.id}" data-field="total">
+          </div>
+          <div class="di-edit-group">
+            <span class="di-edit-lbl">Remaining</span>
+            <input class="di-edit-inp" type="number" step="0.01" value="${dt.remaining}" data-dtid="${dt.id}" data-field="remaining">
+          </div>
+        </div>
+      </div>
+      <div class="ptk"><div class="pfill ${dt.cls}" data-w="${pct.toFixed(1)}" style="width:0%"></div></div>
+      <div class="di-meta">
+        <span>${dt.mo()} · Payoff: <strong>${dt.payoff}</strong></span>
+        <span>After ${tag}: <strong>${fmt(rem)}</strong> left &nbsp;·&nbsp; <strong>${pct.toFixed(1)}%</strong> paid</span>
+      </div>`;
+
+    // Live update on debt tracker input change
+    div.querySelectorAll('.di-edit-inp').forEach(inp=>{
+      inp.addEventListener('change',()=>{
+        const storeId=inp.dataset.dtid;
+        if(debtStore[storeId]) debtStore[storeId][inp.dataset.field]=parseFloat(inp.value)||0;
+        renderDebt(getMonths());
+      });
+    });
+    list.appendChild(div);
+  });
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('.pfill[data-w]').forEach(el=>el.style.width=el.dataset.w+'%');
+  }));
+}
+
+// ── HEADER ────────────────────────────────────────────────────────────────────
+function renderHeader(months){
+  const now=new Date();
+  document.getElementById('hdrSub').textContent=`6-month forecast · ${MN[months[0].month]} ${months[0].year} – ${MN[months[5].month]} ${months[5].year}`;
+  document.getElementById('hdrBadge').textContent=`Live · Updated ${now.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}`;
+}
+function toggleA(){
+  document.getElementById('abody').classList.toggle('open');
+  document.getElementById('ticon').classList.toggle('open');
+}
+
+// ── SAVINGS TRACKER ───────────────────────────────────────────────────────────
+function renderSavings(months){
+  const target=parseFloat(document.getElementById('emergencyTarget')?.value)||500;
+  const nets=months.map(({year,month})=>calcMonth(year,month).net);
+
+  // Cumulative: fill emergency fund first, then savings
+  let emergencyFilled=0;
+  let totalSavings=0;
+  const rows=[];
+
+  nets.forEach((net,i)=>{
+    const leftover=Math.max(0,net);
+    const deficit=Math.min(0,net); // negative = shortfall
+    let emFill=0,savFill=0;
+    if(leftover>0){
+      const emNeeded=Math.max(0,target-emergencyFilled);
+      emFill=Math.min(leftover,emNeeded);
+      emergencyFilled=Math.min(target,emergencyFilled+emFill);
+      savFill=Math.max(0,leftover-emFill);
+      totalSavings+=savFill;
+    }
+    rows.push({month:months[i],net,leftover,emFill,savFill,emergencyFilled:Math.min(target,emergencyFilled)});
+  });
+
+  const totalLeftover=nets.reduce((s,n)=>s+Math.max(0,n),0);
+  const totalDeficit=nets.reduce((s,n)=>s+Math.min(0,n),0);
+
+  // KPIs
+  const emPct=Math.min(100,(emergencyFilled/target)*100);
+  document.getElementById('savKpis').innerHTML=`
+    <div class="sav-kpi">
+      <div class="sav-kpi-lbl">Emergency Fund (target $${target.toFixed(0)})</div>
+      <div class="sav-kpi-val ${emergencyFilled>=target?'pos':'neu'}">${fmt(emergencyFilled)}</div>
+      <div style="height:6px;background:var(--surface2);border-radius:100px;overflow:hidden;margin-top:8px">
+        <div style="height:100%;width:${emPct.toFixed(1)}%;background:linear-gradient(90deg,#E8652A,#F0925A);border-radius:100px;transition:width 1s cubic-bezier(.34,1.56,.64,1)"></div>
+      </div>
+      <div class="sav-kpi-sub">${emPct.toFixed(0)}% funded over 6 months</div>
+    </div>
+    <div class="sav-kpi">
+      <div class="sav-kpi-lbl">Total Savings</div>
+      <div class="sav-kpi-val ${totalSavings>0?'pos':'neu'}">${fmt(totalSavings)}</div>
+      <div class="sav-kpi-sub">After emergency fund is topped up</div>
+    </div>
+    <div class="sav-kpi">
+      <div class="sav-kpi-lbl">Total Surplus</div>
+      <div class="sav-kpi-val ${totalLeftover>0?'pos':'neu'}">${fmt(totalLeftover)}</div>
+      <div class="sav-kpi-sub">Sum of all positive months</div>
+    </div>
+    <div class="sav-kpi">
+      <div class="sav-kpi-lbl">Total Deficit</div>
+      <div class="sav-kpi-val ${totalDeficit<0?'neg':'neu'}">${fmt(totalDeficit)}</div>
+      <div class="sav-kpi-sub">Sum of all negative months</div>
+    </div>`;
+
+  // Month bars
+  const maxAbs=Math.max(...nets.map(n=>Math.abs(n)),1);
+  document.getElementById('savMonths').innerHTML=rows.map(({month,net,emFill,savFill,leftover})=>{
+    const emW=leftover>0?(emFill/maxAbs)*100:0;
+    const savW=leftover>0?(savFill/maxAbs)*100:0;
+    const emLeft=0;
+    const savLeft=emW;
+    const cls=net>0?'pos':net<0?'neg':'zero';
+    return`<div class="sav-month-row">
+      <span class="sav-month-lbl">${MS[month.month]}</span>
+      <div class="sav-bar-track">
+        <div class="sav-bar-emergency" style="width:0%;background:linear-gradient(90deg,#E8652A,#F0925A)" data-w="${emW.toFixed(1)}"></div>
+        <div class="sav-bar-savings"   style="width:0%;left:${savLeft.toFixed(1)}%;background:linear-gradient(90deg,#2A7D5C,#43C99A)" data-w="${savW.toFixed(1)}" data-l="${savLeft.toFixed(1)}"></div>
+      </div>
+      <span class="sav-month-amt ${cls}">${net===0?'—':fmt(net>0?savFill+emFill:net)}</span>
+    </div>`;
+  }).join('');
+
+  // Animate bars
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('.sav-bar-emergency[data-w]').forEach(el=>el.style.width=el.dataset.w+'%');
+    document.querySelectorAll('.sav-bar-savings[data-w]').forEach(el=>{
+      el.style.width=el.dataset.w+'%';
+      el.style.left=el.dataset.l+'%';
+    });
+  }));
+}
+
+
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEBT CLOSURE — UNIFIED STATE + RENDER
+// Single source of truth: dcState. Every UI change updates dcState then calls
+// renderDebtClosure() which rebuilds ALL panels in one pass.
+// ═══════════════════════════════════════════════════════════════════════════════
+const dcState = {
+  boost:        0,      // extra monthly from slider
+  priority:     'avalanche',
+  attackSource: 'projected',
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+
+
+
+
+// Build projection — accepts optional lump-sum reductions applied at month 0
+function getDebtClosureData(extraMonthly){
+  const debtTracker = getActiveDebtTracker();
+  const extra    = extraMonthly || 0;
+  const priority = dcState.priority;
+  const emergBuffer = parseFloat(document.getElementById('emergencyTarget')?.value)||500;
+
+  let debts = debtTracker.map(dt => {
+    const src = dt.srcItem;
+    let basePayment = 0;
+    if(dt.subtype==='weekly')       basePayment = src ? src.amount*4 : 0;
+    else if(dt.subtype==='fortnightly') basePayment = src ? src.amount*2 : 0;
+    else if(dt.subtype==='suit')    basePayment = src ? src.amount/6 : 0;
+    else if(src)                    basePayment = src.amount;
+    // Apply lump sums at start
+    const startRem = dt.remaining;
+    return { id:dt.id, name:dt.name, remaining:startRem, basePayment,
+             cls:dt.cls, startRemaining:startRem, subtype:dt.subtype };
+  }).filter(d=>d.remaining>0);
+
+  const startDate = new Date(2026,3,1);
+  let emergFilled = 0;
+  const rows = [];
+
+  for(let i=0; i<120; i++){
+    const y = startDate.getFullYear() + Math.floor((startDate.getMonth()+i)/12);
+    const m = (startDate.getMonth()+i)%12;
+    const r = calcMonth(y,m);
+    let surplus = Math.max(0, r.net);
+    const emFill = Math.min(surplus, Math.max(0, emergBuffer - emergFilled));
+    emergFilled = Math.min(emergBuffer, emergFilled + emFill);
+    surplus = Math.max(0, surplus - emFill);
+
+    const activeDebts = debts.filter(d=>d.remaining>0);
+    if(activeDebts.length===0) break;
+
+    if(priority==='avalanche')     activeDebts.sort((a,b)=>b.remaining-a.remaining);
+    else if(priority==='snowball') activeDebts.sort((a,b)=>a.remaining-b.remaining);
+
+    const snap = {};
+    activeDebts.forEach((d,idx)=>{
+      let pay = d.basePayment;
+      if(d.subtype==='weekly'){
+        const src=d; // use the item from sections via debtTracker
+        const loanSrc = sections.debt.find(x=>x.subtype==='weekly');
+        if(loanSrc) pay = loanSrc.amount * countFridays(y,m);
+      }
+      let extraForThis = 0;
+      if(priority==='equal') extraForThis = extra / activeDebts.length;
+      else if(idx===0)       extraForThis = extra;
+      const paid = Math.min(d.remaining, pay + extraForThis);
+      d.remaining = Math.max(0, d.remaining - paid);
+      snap[d.id] = { remaining: d.remaining, paid };
+    });
+
+    const allPaid = debts.every(d=>d.remaining<=0);
+    rows.push({ year:y, month:m, net:r.net, snap:JSON.parse(JSON.stringify(snap)), allPaidOff:allPaid });
+    if(allPaid) break;
+  }
+
+  return { rows, debtTracker };
+}
+
+// ── MASTER RENDER ─────────────────────────────────────────────────────────────
+function renderDebtClosure(){
+  const debtTracker = getActiveDebtTracker();
+  const extra   = dcState.boost;
+  // Three scenarios to compute:
+  const base    = getDebtClosureData(0);
+  const boosted = extra>0 ? getDebtClosureData(extra) : null;
+
+  // ── A. Summary KPIs ─────────────────────────────────────────────────────────
+  const totalDebt   = debtTracker.reduce((s,d)=>s+d.remaining,0);
+  const basePayoff  = base.rows.find(r=>r.allPaidOff);
+  const finalPayoff = (boosted||base).rows.find(r=>r.allPaidOff);
+  const baseLabel   = basePayoff  ? MS[basePayoff.month]+' '+basePayoff.year  : 'Beyond 10yr';
+  const finalLabel  = finalPayoff ? MS[finalPayoff.month]+' '+finalPayoff.year : 'Beyond 10yr';
+
+  const totalMinPay = debtTracker.reduce((s,dt)=>{
+    const src = dt.srcItem;
+    if(dt.subtype==='weekly')        return s + (src?src.amount*4:0);
+    if(dt.subtype==='fortnightly')   return s + (src?src.amount*2:0);
+    if(dt.subtype==='suit')          return s + (src?src.amount/6:0);
+    return s + (src?src.amount:0);
+  },0);
+
+  document.getElementById('dcSummary').innerHTML = [
+    {lbl:'Total Debt Remaining', val:fmt(totalDebt),        cls:'acc', sub:'Across all debts'},
+    {lbl:'Est. Payoff Date',     val:finalLabel,             cls:'neu', sub: extra>0&&finalLabel!==baseLabel?`was ${baseLabel}`:'At current rate'},
+    {lbl:'Min Monthly Payment',  val:fmt(totalMinPay),       cls:'neu', sub:'Fixed repayments only'},
+    {lbl:'Months to Debt-Free',  val:(boosted||base).rows.length+'mo', cls:(boosted||base).rows.length<=18?'pos':'neg', sub:'From April 2026'},
+  ].map(k=>`<div class="dc-kpi"><div class="dc-kpi-lbl">${k.lbl}</div><div class="dc-kpi-val ${k.cls}">${k.val}</div><div class="dc-kpi-sub">${k.sub}</div></div>`).join('');
+
+  // ── B. Boost compare banner ──────────────────────────────────────────────────
+  const comp = document.getElementById('dcCompare');
+  if(comp){
+    const improvements = [];
+    if(extra>0 && boosted){
+      const mSaved = base.rows.length - boosted.rows.length;
+      if(mSaved>0) improvements.push(`+$${extra}/mo boost saves <strong>${mSaved} month${mSaved!==1?'s':''}</strong>`);
+    }
+
+    if(improvements.length>0){
+      comp.className='dc-compare visible';
+      comp.innerHTML = `💚 ${improvements.join(' &nbsp;+&nbsp; ')} — new payoff: <strong>${finalLabel}</strong>`;
+    } else {
+      comp.className='dc-compare';
+    }
+  }
+
+  // ── C. Timeline ─────────────────────────────────────────────────────────────
+  const totalMonths = base.rows.length;
+  const COLORS = {loan:'linear-gradient(90deg,#E8652A,#F0925A)', phone:'linear-gradient(90deg,#2A7DC4,#5AABF0)', suit:'linear-gradient(90deg,#7A5AF8,#A885FF)'};
+  const GREEN  = 'linear-gradient(90deg,#2A7D5C,#43C99A)';
+
+  document.getElementById('dcTimeline').innerHTML = debtTracker.map(dt=>{
+    const basePayoff    = base.rows.find(r=>r.snap[dt.id]&&r.snap[dt.id].remaining===0);
+    const finalScenario = boosted||base;
+    const finalPayoff   = boosted ? finalScenario.rows.find(r=>r.snap[dt.id]&&r.snap[dt.id].remaining===0) : basePayoff;
+
+    const baseMo  = basePayoff  ? base.rows.indexOf(basePayoff)+1  : totalMonths;
+    const finalMo = finalPayoff ? finalScenario.rows.indexOf(finalPayoff)+1 : finalScenario.rows.length;
+
+    const basePct  = Math.min(100,(baseMo/totalMonths)*100);
+    const finalPct = Math.min(100,(finalMo/Math.max(totalMonths,finalScenario.rows.length))*100);
+    const improved = finalMo < baseMo;
+
+    const baseLabel  = basePayoff  ? MS[basePayoff.month]+' '+basePayoff.year   : 'Beyond forecast';
+    const finalLbl   = (finalPayoff||basePayoff) ? MS[(finalPayoff||basePayoff).month]+' '+(finalPayoff||basePayoff).year : 'Beyond forecast';
+    const mSaved     = improved ? baseMo - finalMo : 0;
+
+    const baseColor = COLORS[dt.cls]||COLORS.suit;
+
+    return `<div class="dc-debt-block">
+      <div class="dc-debt-hdr">
+        <span class="dc-debt-name">${dt.name}</span>
+        <span class="dc-debt-meta">
+          ${fmt(dt.remaining)} remaining &nbsp;·&nbsp; Payoff: <strong style="color:var(--accent)">${finalLbl}</strong>
+          ${improved?`<span style="color:var(--green);margin-left:8px">▲ ${mSaved}mo sooner</span>`:''}
+        </span>
+      </div>
+      <div class="dc-timeline-track">
+        <div class="dc-timeline-bar" data-w="${basePct.toFixed(1)}" style="background:${baseColor};opacity:${improved?.45:1}">${basePct>18&&!improved?'At current rate':''}</div>
+        ${improved?`<div class="dc-timeline-bar" data-w="${finalPct.toFixed(1)}" style="background:${GREEN};position:absolute;top:0;height:100%;border-radius:100px;opacity:.9">${finalPct>18?'With changes':''}</div>`:''}
+        <span class="dc-timeline-label">${finalLbl}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('#dcTimeline .dc-timeline-bar[data-w]').forEach(el=>{ el.style.width=el.dataset.w+'%'; });
+  }));
+
+  // ── E. Month-by-month table ─────────────────────────────────────────────────
+  const showBoost = extra>0;
+  const finalRows = (boosted||base).rows;
+
+  const thead=`<tr>
+    <th style="text-align:left">Month</th>
+    <th>Net Left</th>
+    ${debtTracker.map(d=>`<th>${d.name.split(' ').slice(0,2).join(' ')}</th>`).join('')}
+    <th>Total Debt</th>
+    ${showBoost?`<th style="color:var(--green)">With +$${extra}/mo Boost</th>`:''}
+  </tr>`;
+
+  const tbody = base.rows.map((row,i)=>{
+    const {year,month,net,snap}=row;
+    const totalRem = debtTracker.reduce((s,dt)=>s+(snap[dt.id]?snap[dt.id].remaining:0),0);
+    const fRow = finalRows[i];
+    const fTotal = fRow ? debtTracker.reduce((s,dt)=>s+(fRow.snap[dt.id]?fRow.snap[dt.id].remaining:0),0) : null;
+
+    const debtCells = debtTracker.map(dt=>{
+      const s=snap[dt.id];
+      if(!s||s.remaining===undefined) return `<td class="zero">—</td>`;
+      return `<td class="${s.remaining===0?'zero':''}">${s.remaining===0?'<span class="dc-paid-badge">✓ Paid</span>':fmt(s.remaining)}</td>`;
+    }).join('');
+
+    const isAllPaid = row.allPaidOff;
+    return `<tr class="${isAllPaid?'paid-off':''}">
+      <td>${MS[month]} ${year}${isAllPaid?' 🎉':''}</td>
+      <td class="${net>=0?'pos':'neg'}">${fmt(net)}</td>
+      ${debtCells}
+      <td><strong>${totalRem>0?fmt(totalRem):'<span style="color:var(--green)">Debt-free!</span>'}</strong></td>
+      ${showBoost?`<td class="${fTotal!==null&&fTotal<totalRem?'pos':'zero'}">${fTotal!==null&&fTotal<totalRem?fmt(fTotal):'—'}</td>`:''}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('dcTable').innerHTML =
+    `<table class="dc-tbl"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+}
+
+// ── EVENT HANDLERS ────────────────────────────────────────────────────────────
+function onBoostChange(){
+  dcState.boost = parseInt(document.getElementById('boostSlider').value)||0;
+  document.getElementById('boostVal').textContent = '$'+dcState.boost.toLocaleString();
+  renderDebtClosure();
+}
+
+
+
+
+
+
+
+
+
+
+
+// ── PAGE SWITCHING ────────────────────────────────────────────────────────────
+let currentPage='monthly';
+function switchPage(page){
+  currentPage=page;
+  ['monthly','forecast','debt'].forEach(p=>{
+    document.getElementById('page'+p.charAt(0).toUpperCase()+p.slice(1)).classList.toggle('active',p===page);
+    const nav=document.getElementById('nav'+p.charAt(0).toUpperCase()+p.slice(1));
+    if(nav)nav.classList.toggle('active',p===page);
+  });
+  // Re-render chart when switching to forecast (canvas needs to be visible)
+  if(page==='forecast'){ const months=getMonths(); renderChart(months); renderDebt(months); renderSavings(months); }
+  if(page==='debt'){ renderDebtClosure(); }
+}
+function renderAll(){
+  const months=getMonths();
+  renderHeader(months);renderKPIs(months);renderTabs(months);renderChart(months);renderDebt(months);renderSavings(months);
+  if(currentPage==='debt')renderDebtClosure();
+}
+
+
+// ── WEEKLY SPENDING ───────────────────────────────────────────────────────────
+function toggleWk(panelId){
+  const el=document.getElementById(panelId);
+  if(el)el.classList.toggle('open');
+}
+
+function updateWeek(itemId,mkey,weekIdx,val,panelId,year,month){
+  const item=sections.variable.find(x=>x.id==itemId);
+  if(!item)return;
+  if(!item.weeklyData)item.weeklyData={};
+  const numWeeks=countFridays(year,month);
+  if(!item.weeklyData[mkey])item.weeklyData[mkey]=Array(numWeeks).fill(item.amount);
+  item.weeklyData[mkey][weekIdx]=parseFloat(val)||0;
+  const total=item.weeklyData[mkey].reduce((a,b)=>a+b,0);
+  const mk=mkey.replace('-','_');
+  const totEl=document.getElementById('wktot_'+itemId+'_'+mk);
+  const valEl=document.getElementById('wkval_'+itemId+'_'+mk);
+  if(totEl)totEl.textContent=fmt(total);
+  if(valEl)valEl.textContent=fmt(-total);
+  // Refresh KPIs and chart silently
+  const months=getMonths();
+  renderKPIs(months);renderChart(months);renderDebt(months);renderSavings(months);
+}
+
+
+window.updateSyncUI=function(s){const p=document.getElementById('syncPill'),t=document.getElementById('syncTxt');if(!p)return;p.className='sync-pill '+s;t.textContent={saved:'Synced',saving:'Saving…',offline:'Offline',error:'Sync error'}[s]||s;};
+function serializeForFirebase(){const ds=Object.entries(debtStore).map(([id,v])=>({id,...v}));return{sections:JSON.parse(JSON.stringify(sections)),debtStore:ds,dcState:{boost:dcState.boost,priority:dcState.priority}};}
+function deserializeFromFirebase(data){if(!data)return;if(data.sections){Object.keys(data.sections).forEach(k=>{if(data.sections[k])sections[k]=data.sections[k];});sections.variable.forEach(v=>{if(!v.weeklyData)v.weeklyData={};});}if(data.debtStore){data.debtStore.forEach(d=>{debtStore[d.id]={total:d.total,remaining:d.remaining,cls:d.cls,payoff:d.payoff};});}if(data.dcState){dcState.boost=data.dcState.boost||0;dcState.priority=data.dcState.priority||'avalanche';}}
+let _syncInit=false,_localFlag=false;
+function initFirebaseSync(){if(!window._fbListen){updateSyncUI('offline');return;}updateSyncUI('saving');window._fbListen(data=>{if(_localFlag){_localFlag=false;return;}deserializeFromFirebase(data);renderA();renderAll();updateSyncUI('saved');_syncInit=true;});setTimeout(()=>{if(!_syncInit){saveToFirebase();_syncInit=true;}},3000);}
+function saveToFirebase(){if(!window._fbSave){updateSyncUI('offline');return;}updateSyncUI('saving');_localFlag=true;window._fbSave(serializeForFirebase());}
+
+renderA();
+renderAll();
+initFirebaseSync();
+</script>
+</body>
+</html>
